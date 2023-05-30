@@ -1,5 +1,8 @@
 const dotenv  = require('dotenv')
 const junction = require('./mongo/junction').junction
+const express = require('express')
+const bodyParser = require("body-parser")
+
 class Enviroment {
     dotenvPath;
     constructor(){
@@ -28,10 +31,10 @@ class Enviroment {
 
 
 function init(){
-var express = require('express')
+
 const app = express()
 const cor = require('cors')
-const bodyParser = require("body-parser")
+
 app.use(cor())
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
