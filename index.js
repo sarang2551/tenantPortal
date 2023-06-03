@@ -1,5 +1,6 @@
 const dotenv  = require('dotenv')
 const junction = require('./mongo/junction').junction
+const express = require('express')
 class Enviroment {
     dotenvPath;
     constructor(){
@@ -20,15 +21,15 @@ class Enviroment {
     }
     getMongoConfig = ()=>{
         return {
-            mongoUrl: process.env.MONGO_URL
+            mongoUrl: `mongodb+srv://sarangadmin:${process.env.MONGO_PASSWORD}@cluster0.faxey7j.mongodb.net/`
         }
     }
 }
 
 
 
-function init(){
-var express = require('express')
+async function init(){
+
 const app = express()
 const cor = require('cors')
 const bodyParser = require("body-parser")
@@ -39,8 +40,8 @@ app.use(bodyParser.urlencoded({extended:true}));
 require('./routes')(app)
 var mongoConfig = new Enviroment().getMongoConfig()
 var mongoStart = new junction(mongoConfig)
-mongoStart.init()
-
+await mongoStart.init()
+mongoStart.addDocumentToCollection()
 app.listen(process.env.PORT || 3000,()=>{
     console.log('server started at port: 5000')
 })

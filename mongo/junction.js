@@ -7,18 +7,11 @@ exports.junction =  class junction {
     client;
     constructor(config){
         this.mongoConfig = config
-        this.init()
     }
     init = async()=>{
         try{
-            this.client = new MongoClient(this.mongoConfig.mongoUrl,{useUnifiedTopology:true}).connect((err)=>{
-                if(err){ throw e}else{
-                    console.log("Mongo connected")
-                    this.testFunction()
-                }
-               
-            })
-            
+            this.client = await MongoClient.
+            connect(this.mongoConfig.mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
             
         }catch(e){
             console.error("Mongo client unable to connect")
@@ -40,10 +33,22 @@ exports.junction =  class junction {
             
             
         }catch(e){
-            throw e + " because of js is stupid"
+            throw "Error running test function: " + e
         }
     }
-    verifyUserLogin = ()=>{
+    verifyUserLogin = () => {
 
     }
+    addDocumentToCollection = async() => {
+        try {
+          const database = this.client.db('test');
+          const collection = database.collection("myCollection");
+          const document = {"Name":"Sarang"}
+          const result = await collection.insertOne(document);
+          console.log('Document added:', result.insertedId);
+        } catch (error) {
+          console.error('Error adding document:', error);
+        }
+      }
+      
 }
