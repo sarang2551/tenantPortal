@@ -37,13 +37,13 @@ app.use(cor())
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
 // Parse JSON bodies (as sent by API clients)
-require('./routes')(app)
+
 var mongoConfig = new Enviroment().getMongoConfig()
 var mongoStart = new junction(mongoConfig)
-await mongoStart.init()
-mongoStart.addDocumentToCollection()
-app.listen(process.env.PORT || 3000,()=>{
-    console.log('server started at port: 5000')
+await mongoStart.init() // awaits the start of the database instance
+require('./routes')(app,mongoStart)
+app.listen(process.env.PORT,()=>{
+    console.log("server started")
 })
 
 }
