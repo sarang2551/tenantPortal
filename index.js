@@ -1,5 +1,5 @@
 const dotenv  = require('dotenv')
-const junction = require('./mongo/junction').junction
+const baseDatabase = require('./mongo/baseDatabase').baseDatabase
 const express = require('express')
 class Enviroment {
     dotenvPath;
@@ -21,7 +21,26 @@ class Enviroment {
     }
     getMongoConfig = ()=>{
         return {
-            mongoUrl: `mongodb+srv://sarangadmin:${process.env.MONGO_PASSWORD}@cluster0.faxey7j.mongodb.net/`
+            mongoUrl: `mongodb+srv://sarangadmin:${process.env.MONGO_PASSWORD}@cluster0.faxey7j.mongodb.net/`,
+            db:"tenantPortal",
+            tenantConfig:this.getTenantUseCases(),
+            landlordCofig:this.getLandlordUseCases()
+        }
+    }
+    getTenantUseCases = () => {
+        return {
+            login:"tenant_auth",
+            addServiceTicket:"serviceTickets",
+            deleteServiceTickets:"serviceTickets",
+            registerUnit:"units",
+            updateServiceTicketProgress:"serviceTickets",
+        }
+    }
+    getLandlordUseCases = () => {
+        return {
+            login:"landlord_auth",
+            updateServiceTicketProgress:"serviceTickets",
+            registerTenant:""
         }
     }
 }
@@ -39,9 +58,9 @@ app.use(bodyParser.urlencoded({extended:true}));
 // Parse JSON bodies (as sent by API clients)
 
 var mongoConfig = new Enviroment().getMongoConfig()
-var mongoStart = new junction(mongoConfig)
-await mongoStart.init() // awaits the start of the database instance
-require('./routes')(app,mongoStart)
+var databaseClass = new baseDatabase(mongoConfig)
+await databaseClass.init() // awaits the start of the database instance
+require('./routes')(app,databaseClass)
 app.listen(process.env.PORT,()=>{
     console.log("server started")
 })
