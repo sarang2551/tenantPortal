@@ -9,10 +9,9 @@ exports.tenantDatabase = class tenantDatabase{
     verifyLogin = async(userInfo) => {
         var username = userInfo["username"]
         var password = userInfo["password"]
-        var userType = userInfo["userType"]
         // find the user using the username
-        const collec = this.database.collection(this.useCases.login)
-        const userObject = await collec.findOne({"username": username})
+        const collection = this.database.collection(this.useCases.login)
+        const userObject = await collection.findOne({username})
         if(userObject["password"] == password){
             // authentication successfull
             return true
@@ -48,7 +47,7 @@ exports.tenantDatabase = class tenantDatabase{
                 }
                 var landlordID = serviceTicket["landlordID"]
                 // get the landlord object ID in the database to add that to the service Ticket ID
-                const landlord_object = await this.database.collection("landlord_auth").findOne({landlordID})
+                const landlord_object = await this.database.collection(this.useCases.registerLandlord).findOne({landlordID})
                 if(landlord_object == null){
                     console.log(`No landlord with id: ${landlordID}`)
                     return false
@@ -68,7 +67,8 @@ exports.tenantDatabase = class tenantDatabase{
         }
       }
     async updateServiceTicketProgress(serviceTicketID){
-        const collection = this.database.collection(this.useCases.updateServiceTicketProgress)
+        try{
+            const collection = this.database.collection(this.useCases.updateServiceTicketProgress)
         // find the serviceTicket and check whether both landlord and tenant have confirmed progress
         const serviceTicket = await collection.findOne({id:serviceTicketID})
         if(serviceTicket == null){
@@ -110,21 +110,33 @@ exports.tenantDatabase = class tenantDatabase{
             }
         })
         return true
+        }catch(err){
+            console.log(`Error updating Service Ticket progress with ID: ${serviceTicketID}`)
+            return false
+        }
+        
     }
     async deleteServiceTicket(serviceTicketID){
-        const collection = this.database.collection(this.useCases.deleteServiceTicket)
-        await collection.deleteOne({id:serviceTicketID},(err,result)=>{
-            if(err){
-                console.log(`Unable to delete Service Ticket with ID: ${serviceTicketID}`)
-                return false
-            } else {
-                console.log(`Deleted serviceTicket ${serviceTicketID}`)
-                return true
-            }
-        })
+        try{
+            const collection = this.database.collection(this.useCases.deleteServiceTicket)
+            await collection.deleteOne({id:serviceTicketID},(err,result)=>{
+                if(err){
+                    console.log(`Unable to delete Service Ticket with ID: ${serviceTicketID}`)
+                    return false
+                } else {
+                    console.log(`Deleted serviceTicket ${serviceTicketID}`)
+                    return true
+                }
+            })
+        }catch(err){
+            console.log(`Error deleting Service Ticker with ID: ${serviceTicketID}`)
+            return false
+        }
+
     }
     async registerUnit(data){
-        // {unitID, buildingID, unitNumber, images, landlordID, tenantID}
+        try{
+            // {unitID, buildingID, unitNumber, images, landlordID, tenantID}
         const collection = this.database.collection(this.useCases.registerUnit)
         
         await collection.insertOne(data,(err,result)=>{
@@ -134,11 +146,38 @@ exports.tenantDatabase = class tenantDatabase{
             }
         })
 
+        }catch(err){
+            console.log(`Error registering unit with ID: ${data["unitID"]} through tenant`)
+            return false
+        }
+        
     }
-    async addLandlord(){
-        // sends a notification to the landlord that the tenant wants to add them
-        // once the status is approved, then the landlord is added automatically
+    async registerLandlord(notificationData){
+        try{
+            // sends a notification to the landlord that the tenant wants to add them
+        const {landlordID,...notifData} = notificationData
+        const landlordCollection = this.database.collection(this.useCases.registerLandlord)
+        const landlordObject = await landlordCollection.findOne({id:landlordID})
+        if(landlordObject == null){
+            console.log(`Error finding landlord with ID: ${landlordID}`)
+            return false
+        }
+        var currentNotifications = landlordObject['notifications']
+        var newNotifications = [notifData,...currentNotifications]
+
+        landlordCollection.updateOne({id:landlordID},{$set:{notifications:newNotifications}},(err,result)=>{
+            if(err){
+                console.log(`Error sending addLandlord notification: ${err}`)
+                return false
+            } 
+            return true
+        })
+        return true
+        }catch(err){
+            console.log(`Error registering landlord with ID: ${landlordID}`)
+            return false
+        }
+        
     }
-   
 
 }

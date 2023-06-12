@@ -1,6 +1,11 @@
 const dotenv  = require('dotenv')
 const baseDatabase = require('./mongo/baseDatabase').baseDatabase
-const express = require('express')
+const {json, urlencoded, rest,notFound, errorHandler } = require("@feathersjs/express")
+const express = require("@feathersjs/express")
+const {feathers} = require("@feathersjs/feathers")
+
+
+
 class Enviroment {
     dotenvPath;
     constructor(){
@@ -29,18 +34,19 @@ class Enviroment {
     }
     getTenantUseCases = () => {
         return {
-            login:"tenant_auth",
+            login:"tenants",
             addServiceTicket:"serviceTickets",
             deleteServiceTickets:"serviceTickets",
             registerUnit:"units",
             updateServiceTicketProgress:"serviceTickets",
+            registerLandlord:"landlords"
         }
     }
     getLandlordUseCases = () => {
         return {
-            login:"landlord_auth",
+            login:"landlords",
             updateServiceTicketProgress:"serviceTickets",
-            registerTenant:""
+            registerTenant:"tenants"
         }
     }
 }
@@ -55,15 +61,18 @@ const bodyParser = require("body-parser")
 app.use(cor())
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
+
 // Parse JSON bodies (as sent by API clients)
 
 var mongoConfig = new Enviroment().getMongoConfig()
 var databaseClass = new baseDatabase(mongoConfig)
 await databaseClass.init() // awaits the start of the database instance
-require('./routes')(app,databaseClass)
-app.listen(process.env.PORT,()=>{
-    console.log("server started")
+
+// Listen on port 3030
+const server = await app.listen(3000,()=>{
+    console.log("Server started")
 })
 
+require('./routes')(app,databaseClass)
 }
 init()

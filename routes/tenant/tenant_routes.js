@@ -1,5 +1,5 @@
 module.exports = function(app,database){
-    app.post('/tenantLogin', async(req,res)=>{
+    app.post('/tenant/tenantLogin', async(req,res)=>{
         const result = await database.verifyLogin(req.body)
         if(result){
             // send ok status
@@ -8,7 +8,7 @@ module.exports = function(app,database){
             res.sendStatus(401)
         }
     })
-    app.post('/addServiceTicket',async(req,res)=>{
+    app.post('/tenant/addServiceTicket',async(req,res)=>{
         const result = await database.addServiceTicket(req.body)
         if(result){
             // send ok status
@@ -17,10 +17,17 @@ module.exports = function(app,database){
             res.sendStatus(401)
         }
     })
-    app.post('/updateServiceTicketProgress',async(req,res)=>{
+
+    app.post('/tenant/updateServiceTicketProgress',async(req,res)=>{
         const result = await database.updateServiceTicketProgress(req.body.serviceTicketID)
         if(result) res.sendStatus(200)
         else res.sendStatus(404)
     })
     
+    app.post('/tenant/registerLandlord',async(req,res)=>{
+        // req.body should contain all the notification details
+        const result = await database.registerLandlord(req.body)
+        if(result) res.sendStatus(200)
+        else res.sendStatus(404)
+    })
 }
