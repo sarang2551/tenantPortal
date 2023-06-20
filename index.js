@@ -8,7 +8,6 @@ const {
   errorHandler,
 } = require("@feathersjs/express");
 const express = require("@feathersjs/express");
-const { feathers } = require("@feathersjs/feathers");
 
 class Enviroment {
   dotenvPath;

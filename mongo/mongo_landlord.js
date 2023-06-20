@@ -5,4 +5,24 @@ exports.landlordDatabase = class landlordDatabase{
         this.client = config.client;
         this.useCases = config.landlordConfig
     }
+
+    // verifyLogin = async (userinfo) => {
+    //     var username = userInfo["username"]
+    //     var password = userInfo["password"]
+    //     // find the user using the username
+    //     const collection = this.database.collection(this.useCases.login)
+    //     const userObject = await collection.findOne({username})
+    //     if(userObject["password"] == password){
+    //         // authentication successfull
+    //         return true
+    //     } else {
+    //         return false
+    //     }
+    // }
+
+    // addTenants 
+    // updateProgress
+    // notifyServiceTickets
+    // getPendingServiceTickets
+    // 
 }
