@@ -21,6 +21,30 @@ exports.tenantDatabase = class tenantDatabase{
         
     }
 
+    //Tenant registration
+    async registerTenant(userInfo) {
+        try {
+          const collection = this.database.collection(this.useCases.login);
+          const { username, password } = userInfo;
+          const existingTenant = await collection.findOne({ username });
+    
+          if (existingTenant) {
+            console.log("Tenant already exists.");
+            return false;
+          }
+    
+          const tenant = { username, password };
+          const result = await collection.insertOne(tenant);
+    
+          console.log("Tenant registered:", result.insertedId);
+          return true;
+        } catch (error) {
+          console.error("Error registering tenant:", error);
+          return false;
+        }
+      }
+
+
     addServiceTicket = async(serviceTicket) => {
         try {
             if(this.database){
@@ -179,5 +203,6 @@ exports.tenantDatabase = class tenantDatabase{
         }
         
     }
+    
 
 }

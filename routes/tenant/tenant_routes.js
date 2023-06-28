@@ -30,6 +30,15 @@ module.exports = function(app,database){
         if(result) res.sendStatus(200)
         else res.sendStatus(404)
     })
+
+//Tenant registration
+    app.post('/tenant/registerTenant',async(req,res)=>{
+        // req.body should contain all the notification details
+        const result = await database.registerTenant(req.body)
+        if(result) res.sendStatus(200)
+        else res.sendStatus(404)
+    })
+
     app.post('/tenant/registerUnit',async(req,res)=>{
         const result = await database.registerUnit(req.body)
         if(result) res.sendStatus(200)
