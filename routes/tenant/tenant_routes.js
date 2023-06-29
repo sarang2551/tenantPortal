@@ -3,6 +3,7 @@ module.exports = function(app,database){
         const result = await database.verifyLogin(req.body)
         if(result){
             // send ok status
+            console.log("Login successful")
             res.sendStatus(200)
         } else {
             res.sendStatus(401)

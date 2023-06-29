@@ -39,14 +39,16 @@ class Enviroment {
             deleteServiceTickets:"serviceTickets",
             registerUnit:"units",
             updateServiceTicketProgress:"serviceTickets",
-            registerLandlord:"landlords"
+            registerLandlord:"landlords",
+            getAllNotifications:"landlords"
         }
     }
     getLandlordUseCases = () => {
         return {
             login:"landlords",
             updateServiceTicketProgress:"serviceTickets",
-            registerTenant:"tenants"
+            registerTenant:"tenants",
+            getAllNotifications:"landlords"
         }
     }
 }
@@ -68,8 +70,8 @@ var mongoConfig = new Enviroment().getMongoConfig()
 var databaseClass = new baseDatabase(mongoConfig)
 await databaseClass.init() // awaits the start of the database instance
 
-// Listen on port 3030
-const server = await app.listen(3000,()=>{
+// Listen on port 8000
+const server = await app.listen(8000,()=>{
     console.log("Server started")
 })
 

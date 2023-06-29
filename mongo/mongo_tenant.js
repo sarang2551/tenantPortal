@@ -1,3 +1,4 @@
+const TenantNotifications = require("../models/tenantNotifBuilder")
 
 exports.tenantDatabase = class tenantDatabase{
     database;
@@ -177,30 +178,41 @@ exports.tenantDatabase = class tenantDatabase{
     async registerLandlord(notificationData){
         try{
             // sends a notification to the landlord that the tenant wants to add them
-        const {landlordID,...notifData} = notificationData
-        const landlordCollection = this.database.collection(this.useCases.registerLandlord)
-        const landlordObject = await landlordCollection.findOne({id:landlordID})
-        if(landlordObject == null){
-            console.log(`Error finding landlord with ID: ${landlordID}`)
-            return false
-        }
-        var currentNotifications = landlordObject['notifications']
-        var newNotifications = [notifData,...currentNotifications]
-
-        landlordCollection.updateOne({id:landlordID},{$set:{notifications:newNotifications}},(err,result)=>{
-            if(err){
-                console.log(`Error sending addLandlord notification: ${err}`)
+            const {landlordID,tenantName,unit,...notifData} = notificationData
+            var description = `${tenantName} wants to add you as
+             landlord for unit ${unit}`
+            const notification = {
+                landlordID,
+                tenantName,
+                description,
+                title:"Registration Request",
+                unit,
+                notifData,
+                accepted:false
+            }
+            
+            const landlordCollection = this.database.collection(this.useCases.registerLandlord)
+            const landlordObject = await landlordCollection.findOne({id:landlordID})
+            if(landlordObject == null){
+                console.log(`Error finding landlord with ID: ${landlordID}`)
                 return false
-            } 
+            }
+            var currentNotifications = landlordObject['notifications']
+            var newNotifications = [notification,...currentNotifications]
+            // sending notification
+            landlordCollection.updateOne({id:landlordID},{$set:{notifications:newNotifications}},(err,result)=>{
+                if(err){
+                    console.log(`Error sending addLandlord notification: ${err}`)
+                    return false
+                } 
+                return true
+            })
             return true
-        })
-        return true
         }catch(err){
             console.log(`Error registering landlord with ID: ${landlordID}`)
             return false
         }
         
     }
-    
 
 }
