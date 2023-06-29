@@ -31,12 +31,16 @@ module.exports = function(app,database){
         else res.sendStatus(404)
     })
 
-//Tenant registration
-    app.post('/tenant/registerTenant',async(req,res)=>{
+    //Tenant registration
+    app.post('/tenant/accountRegistrationTenant',async(req,res)=>{
         // req.body should contain all the notification details
-        const result = await database.registerTenant(req.body)
-        if(result) res.sendStatus(200)
-        else res.sendStatus(404)
+        try{
+            const result = await database.registerTenant(req.body)
+            if(result) res.sendStatus(200)
+        }catch(error){
+            res.sendStatus(500).json({error})
+        }
+        
     })
 
     app.post('/tenant/registerUnit',async(req,res)=>{

@@ -25,17 +25,15 @@ exports.tenantDatabase = class tenantDatabase{
     async registerTenant(userInfo) {
         try {
           const collection = this.database.collection(this.useCases.login);
-          const { username, password } = userInfo;
+          const { username } = userInfo;
           const existingTenant = await collection.findOne({ username });
     
           if (existingTenant) {
             console.log("Tenant already exists.");
             return false;
           }
-    
-          const tenant = { username, password };
-          const result = await collection.insertOne(tenant);
-    
+
+          const result = await collection.insertOne(userInfo);
           console.log("Tenant registered:", result.insertedId);
           return true;
         } catch (error) {
