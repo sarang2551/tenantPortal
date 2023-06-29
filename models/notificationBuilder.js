@@ -1,8 +1,9 @@
 class Notification {
     constructor(builder) {
+      const date = new Date()
       this.title = builder.title;
       this.description = builder.description;
-      this.date = new Date().getDate()
+      this.date = `${date.getDay()}:${date.getMonth()}:${date.getFullYear()}`
       this.senderID = builder.senderID
       this.recipientID = builder.recipientID
       this.collection = builder.collection
@@ -26,8 +27,8 @@ class Notification {
             return false
         }
         var currentNotifications = recipientObject['notifications']
-        var newNotifications = [notification,...currentNotifications]
-        await collection.updateOne({id:landlordID},{$set:{notifications:newNotifications}},(err,result)=>{
+        var newNotifications = [notification,...currentNotifications] // add at index 0 because its the latest notification
+        await collection.updateOne({id:this.recipientID},{$set:{notifications:newNotifications}},(err,result)=>{
             if(err){
                 console.log(`Error sending addLandlord notification: ${err}`)
                 return false
@@ -81,6 +82,5 @@ class Notification {
     }
   }
 
-exports.NotificationBuilder = NotificationBuilder;
-  
+  module.exports = NotificationBuilder
   
