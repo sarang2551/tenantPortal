@@ -22,12 +22,12 @@ module.exports = function(app,database){
     app.post('/tenant/updateServiceTicketProgress',async(req,res)=>{
         const result = await database.updateServiceTicketProgress(req.body.serviceTicketID)
         if(result) res.sendStatus(200)
-        else res.sendStatus(404)
+        else res.json({status:false})
     })
     
-    app.post('/tenant/registerLandlord',async(req,res)=>{
+    app.post('/tenant/requestRegisterLandlord',async(req,res)=>{
         // req.body should contain all the notification details
-        const result = await database.registerLandlord(req.body)
+        const result = await database.requestRegisterLandlord(req.body)
         if(result) res.sendStatus(200)
         else res.sendStatus(404)
     })

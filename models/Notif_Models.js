@@ -7,6 +7,13 @@ class Notif_AddingServiceTicket extends NotificationBuilder {
         super()
         this.withTitle("Service Ticket Addition")
     }
+
+}
+class Notif_UpdateServiceTicket extends NotificationBuilder {
+    constructor(){
+        super()
+        /* TODO: show which attribute of the Service Ticket was updated and what action is required after that */
+    }
 }
 class Notif_RegisterLandlordRequest extends NotificationBuilder {
     constructor(){
@@ -30,5 +37,6 @@ class Notif_RegisterLandlordRequest extends NotificationBuilder {
 
 module.exports = TenantNotifications = {
     Notif_AddingServiceTicket,
-    Notif_RegisterLandlordRequest
+    Notif_RegisterLandlordRequest,
+    Notif_UpdateServiceTicket
 }

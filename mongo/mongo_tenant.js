@@ -1,11 +1,13 @@
-const {Notif_AddingServiceTicket,Notif_RegisterLandlordRequest} = require("../models/tenantNotifBuilder")
+const {Notif_AddingServiceTicket,Notif_RegisterLandlordRequest,Notif_UpdateServiceTicket} = require("../models/Notif_Models")
 
 exports.tenantDatabase = class tenantDatabase{
     database;
     useCases;
+    recipientCollection;
     constructor(config){
         this.database = config.database;
         this.useCases = config.tenantConfig
+        this.recipientCollection = this.database.collection("landlords")
     }
     verifyLogin = async(userInfo) => {
         var username = userInfo["username"]
@@ -47,35 +49,42 @@ exports.tenantDatabase = class tenantDatabase{
     addServiceTicket = async(serviceTicket) => {
         try {
             if(this.database){
+                const {landlordID, tenantID, tenantName, unit} = serviceTicket["tenantID"]
+                const notification  = new Notif_AddingServiceTicket()
+                .withSenderID(tenantID)
+                .withRecipientID(landlordID)
+                .withDescription(`Tenant ${tenantName} in unit ${unit} has added a Service Ticket`)
+                .withCollection(this.recipientCollection)
+                .build()
+                notification.send()
                 
+                // var document = {
+                // "tenantID":"Sarang",
+                // "decription":"",
+                // "startDate":"",
+                // "progressStage":1,
+                // "progressBar":progressBar,
+                // "endDate":"", // needs to be updated later
+                // "images":[],
+                // "documents":[],
+                // "title":"",
+                // "landlordName":"",
+                // "landlordID":"",
+                // "id":"testID",
+                // "unitID":""
+                // }
+                // get the landlord object ID in the database to add that to the service Ticket ID
                 const collection = this.database.collection(this.useCases.addServiceTicket);
                 var starting_state = [false,false]
                 var progressBar = {}
                 for(let i = 1; i < 5; i++) progressBar[i] = starting_state
-                
-                var document = {
-                "tenantID":"Sarang",
-                "decription":"",
-                "startDate":"",
-                "progressStage":1,
-                "progressBar":progressBar,
-                "endDate":"", // needs to be updated later
-                "images":[],
-                "documents":[],
-                "title":"",
-                "landlordName":"",
-                "landlordID":"",
-                "id":"testID",
-                "unitID":""
-                }
-                var landlordID = serviceTicket["landlordID"]
-                // get the landlord object ID in the database to add that to the service Ticket ID
+                var STDocument = {...serviceTicket,progressBar}
                 const landlord_object = await this.database.collection(this.useCases.registerLandlord).findOne({landlordID})
                 if(landlord_object == null){
                     console.log(`No landlord with id: ${landlordID}`)
                     return false
                 }
-                document = {landlordRef: landlord_object._id, ...document}
+                STDocument = {landlordRef: landlord_object._id, ...STDocument}
                 const result = await collection.insertOne(document);
                 console.log('Service Ticket added:', result.insertedId);
                 return true
@@ -98,16 +107,21 @@ exports.tenantDatabase = class tenantDatabase{
             console.log(`Service Ticket with ID: ${serviceTicketID} couldn't be found`)
             return false
         }
-        var curStage = serviceTicket['progressStage']
-        var progressBar = serviceTicket['progressBar']
-        var curLevel = progressBar[curStage]
-        var endDate = serviceTicket['endDate']
+        var notificationDescription = ""
+        var notificationTitle = ""
+        var finalStage = 4
+        var {progressStage, progressBar, endDate, title, unit, tenantID, landlordID} = serviceTicket 
+        // progressStage: the stage the ticket is currently on
+        // progressBar:  the overall progress handler
+        // endDate: the date the service ticket reaches the final progressStage
+        var curLevel = progressBar[progressStage] // boolean array [bool,bool] 0 index for tenant, 1 index for landlord
+ 
         if(curLevel[1] == true && curLevel[0] == false){
-            // landlord has already approved the curStage
-            progressBar[curStage][0] = true
-            // current stage of the serviceTicker is completed
-            if(curStage < 4){
-                curStage += 1
+            // landlord has already approved the progressStage (now to update on tenant side)
+            progressBar[progressStage][0] = true
+            // current stage of the serviceTicket is completed (tenant = true, landlord = true)
+            if(progressStage < finalStage){ // if current stage is less than the final stage
+                progressStage += 1
             } else{
                 // the final stage is completed
                 var newDate = new Date()
@@ -115,18 +129,31 @@ exports.tenantDatabase = class tenantDatabase{
                 const month = String(newDate.getMonth() + 1).padStart(2, '0'); // Months are zero-based
                 const day = String(newDate.getDate()).padStart(2, '0');
                 endDate = `${day}-${month}-${year}`
+                notificationDescription = `Service Ticket: ${title} for ${unit} was successfully completed on ${endDate}`
+                notificationTitle = `Service Ticket Completion for unit ${unit}`
             }
             
         } else if (curLevel[1] == false && curLevel[0] == false) {
-            // tenant has approved the current stage while landlord hasn't
-            progressBar[curStage][0] = true
+            // tenant has approved the current stage while landlord hasn't, the serviceTicket remains at currentStage
+            progressBar[progressStage][0] = true
+            /*TODO: add helpful instructions later based on the progressStage level */
+            notificationDescription = `Progress for Service Ticket: ${title} has been updated, further actions required `
+            notificationTitle = `Service Ticket Progress Update for unit ${unit}`
         } else if(curLevel[0] == true){
             console.log("tenant has already updated the progress for this stage")
             return false
         }
-        
+        const notification = new Notif_UpdateServiceTicket()
+        .withDescription(notificationDescription)
+        .withTitle(notificationTitle)
+        .withCollection(this.recipientCollection)
+        .withSenderID(tenantID)
+        .withRecipientID(landlordID)
+        .withCustomAttributes({progressStage})
+        .build()
+        notification.send()
 
-        collection.updateOne({_id:serviceTicket["_id"]},{$set: { progressBar, progressStage: curStage, endDate }},(err,result)=>{
+        collection.updateOne({_id:serviceTicket["_id"]},{$set: { progressBar, progressStage: progressStage, endDate }},(err,result)=>{
             if(err){
                 console.log(err)
                 return false
@@ -175,7 +202,7 @@ exports.tenantDatabase = class tenantDatabase{
         }
         
     }
-    async registerLandlord(notificationData){
+    async requestRegisterLandlord(notificationData){
         try{
             // sends a notification to the landlord that the tenant wants to add them
             const {landlordID,tenantID,tenantName,unit,monthlyRental} = notificationData
