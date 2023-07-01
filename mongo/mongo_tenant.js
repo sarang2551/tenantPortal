@@ -49,7 +49,7 @@ exports.tenantDatabase = class tenantDatabase{
     addServiceTicket = async(serviceTicket) => {
         try {
             if(this.database){
-                const {landlordID, tenantID, tenantName, unit} = serviceTicket["tenantID"]
+                const {landlordID, tenantID, tenantName, unit} = serviceTicket
                 const notification  = new Notif_AddingServiceTicket()
                 .withSenderID(tenantID)
                 .withRecipientID(landlordID)
@@ -75,17 +75,20 @@ exports.tenantDatabase = class tenantDatabase{
                 // }
                 // get the landlord object ID in the database to add that to the service Ticket ID
                 const collection = this.database.collection(this.useCases.addServiceTicket);
+
+                const progressStage = 0
                 var starting_state = [false,false]
-                var progressBar = {}
-                for(let i = 1; i < 5; i++) progressBar[i] = starting_state
-                var STDocument = {...serviceTicket,progressBar}
-                const landlord_object = await this.database.collection(this.useCases.registerLandlord).findOne({landlordID})
+                var progressBar = []
+                for(let i = 1; i < 5; i++) progressBar.push(starting_state)
+                // adding default progress parameters
+                var STDocument = {...serviceTicket,progressBar,progressStage}
+                const landlord_object = await this.database.collection(this.useCases.registerLandlord).findOne({id:landlordID})
                 if(landlord_object == null){
                     console.log(`No landlord with id: ${landlordID}`)
                     return false
                 }
                 STDocument = {landlordRef: landlord_object._id, ...STDocument}
-                const result = await collection.insertOne(document);
+                const result = await collection.insertOne(STDocument);
                 console.log('Service Ticket added:', result.insertedId);
                 return true
             } else {
@@ -94,7 +97,7 @@ exports.tenantDatabase = class tenantDatabase{
             }
           
         } catch (error) {
-          console.error('Error adding document:', error)
+          console.error('Error adding service ticket:', error)
           return false
         }
       }
@@ -115,7 +118,6 @@ exports.tenantDatabase = class tenantDatabase{
         // progressBar:  the overall progress handler
         // endDate: the date the service ticket reaches the final progressStage
         var curLevel = progressBar[progressStage] // boolean array [bool,bool] 0 index for tenant, 1 index for landlord
- 
         if(curLevel[1] == true && curLevel[0] == false){
             // landlord has already approved the progressStage (now to update on tenant side)
             progressBar[progressStage][0] = true
@@ -151,17 +153,20 @@ exports.tenantDatabase = class tenantDatabase{
         .withRecipientID(landlordID)
         .withCustomAttributes({progressStage})
         .build()
-        notification.send()
-
+        const result = await notification.send()
+        if(!result) throw new Error(`Notification for updating Service Ticket ${serviceTicketID} was not sent!`)
         collection.updateOne({_id:serviceTicket["_id"]},{$set: { progressBar, progressStage: progressStage, endDate }},(err,result)=>{
             if(err){
                 console.log(err)
                 return false
+            } else {
+                console.log(`Updated Service Ticket ${serviceTicketID}: ${result}`)
             }
         })
         return true
+
         }catch(err){
-            console.log(`Error updating Service Ticket progress with ID: ${serviceTicketID}`)
+            console.log(`Error updating Service Ticket progress with ID: ${serviceTicketID} Error: ${err}`)
             return false
         }
         

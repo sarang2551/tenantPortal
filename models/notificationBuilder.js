@@ -23,7 +23,7 @@ class Notification {
         const {collection, ...notification} = this
         const recipientObject = await collection.findOne({id:this.recipientID})
         if(recipientObject == null){
-            console.log(`Error sending notification to: ${recipientID}`)
+            console.log(`Error sending notification to: ${this.recipientID}`)
             return false
         }
         var currentNotifications = recipientObject['notifications']
