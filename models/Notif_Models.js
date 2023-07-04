@@ -14,6 +14,15 @@ class Notif_UpdateServiceTicket extends NotificationBuilder {
         super()
         /* TODO: show which attribute of the Service Ticket was updated and what action is required after that */
     }
+    withProgress(stage, status){
+         const instructions = this.nextStepsDescription(stage,status)
+         this.withCustomAttributes({instructions})   
+         return this
+    }
+    nextStepsDescription(stage, status){
+        /** TODO: craft a custom message for the next steps */
+    }
+
 }
 class Notif_RegisterLandlordRequest extends NotificationBuilder {
     constructor(){

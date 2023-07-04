@@ -1,4 +1,5 @@
 const {Notif_AddingServiceTicket,Notif_RegisterLandlordRequest,Notif_UpdateServiceTicket} = require("../models/Notif_Models")
+const assert = require('assert')
 
 exports.tenantDatabase = class tenantDatabase{
     database;
@@ -10,19 +11,30 @@ exports.tenantDatabase = class tenantDatabase{
         this.recipientCollection = this.database.collection("landlords")
     }
     verifyLogin = async(userInfo) => {
-        var username = userInfo["username"]
-        var password = userInfo["password"]
-        // find the user using the username
-        const collection = this.database.collection(this.useCases.login)
-        const userObject = await collection.findOne({username})
-        if(userObject["password"] == password){
-            // authentication successfull
-            console.log("Successful Login")
-            return true
-        } else {
-            console.log("Incorrect Password")
+        try{
+            this.assertObjectHasProperties(userInfo,{"username":"string","password":"string"})
+            
+            var {username, password} = userInfo
+            // find the user using the username (username is email and should also be the ID)
+            const collection = this.database.collection(this.useCases.login)
+            const userObject = await collection.findOne({username})
+            if(userObject === null){
+                console.log("User not found")
+                return false
+            }
+            if(userObject["password"] == password){
+                // authentication successfull
+                console.log("Login Successful")
+                return true
+            } else {
+                console.log("Login Unsuccessful")
+                return false
+            }
+        }catch(err){
+            console.log(`Error verifing tenant login: ${err}`)
             return false
         }
+        
         
     }
 
@@ -52,6 +64,11 @@ exports.tenantDatabase = class tenantDatabase{
         try {
             if(this.database){
                 const {landlordID, tenantID, tenantName, unit} = serviceTicket
+                const landlord_object = await this.database.collection(this.useCases.registerLandlord).findOne({id:landlordID})
+                if(landlord_object == null){
+                    console.log(`No landlord with id: ${landlordID}`)
+                    return false
+                }
                 const notification  = new Notif_AddingServiceTicket()
                 .withSenderID(tenantID)
                 .withRecipientID(landlordID)
@@ -62,7 +79,7 @@ exports.tenantDatabase = class tenantDatabase{
                 
                 // var document = {
                 // "tenantID":"Sarang",
-                // "decription":"",
+                // "description":"",
                 // "startDate":"",
                 // "progressStage":1,
                 // "progressBar":progressBar,
@@ -82,13 +99,11 @@ exports.tenantDatabase = class tenantDatabase{
                 var starting_state = [false,false]
                 var progressBar = []
                 for(let i = 1; i < 5; i++) progressBar.push(starting_state)
-                // adding default progress parameters
-                var STDocument = {...serviceTicket,progressBar,progressStage}
-                const landlord_object = await this.database.collection(this.useCases.registerLandlord).findOne({id:landlordID})
-                if(landlord_object == null){
-                    console.log(`No landlord with id: ${landlordID}`)
-                    return false
-                }
+                const date = new Date()
+                const startDate = `${date.getDay()}:${date.getMonth()}:${date.getFullYear()}`
+                // adding default parameters
+                var STDocument = {...serviceTicket,progressBar,progressStage,startDate}
+
                 STDocument = {landlordRef: landlord_object._id, ...STDocument}
                 const result = await collection.insertOne(STDocument);
                 console.log('Service Ticket added:', result.insertedId);
@@ -260,8 +275,12 @@ exports.tenantDatabase = class tenantDatabase{
         
     }
 
-    // getServiceTickets = async () => {
-
-    // } 
+    assertObjectHasProperties(obj, properties) {
+        for (const prop in properties) {
+          assert.ok(obj.hasOwnProperty(prop), `Object is missing property: ${prop}`);
+          assert.ok(typeof obj[prop] === properties[prop], `Property '${prop}' is incorrect, expected: ${properties[prop]}, got: ${obj[prop]}`);
+        }
+      }
+    
 
 }
