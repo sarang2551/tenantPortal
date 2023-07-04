@@ -1,0 +1,14 @@
+{
+  "name": "ecs_project",
+  "version": "1.0.0",
+  "description": "My Node.js application",
+  "dependencies": {
+    "@feathersjs/express": "^5.0.5",
+    "@feathersjs/feathers": "^5.0.5",
+    "cors": "^2.8.5",
+    "dotenv": "^16.1.3",
+    "express": "^4.18.2",
+    "mongodb": "^4.1.1",
+    "vhost": "^3.0.2"
+  }
+}
