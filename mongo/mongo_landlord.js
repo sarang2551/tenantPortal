@@ -5,28 +5,6 @@ exports.landlordDatabase = class landlordDatabase{
         this.database = config.database;
         this.useCases = config.landlordConfig
     }
-<<<<<<< HEAD
-    landlordverifyLogin = async(userInfo) => {
-        var landlordusername = userInfo["username"]
-        var landlordpassword = userInfo["password"]
-        // find the user using the username
-        const collection = this.database.collection(this.useCases.login)
-        const userObject = await collection.findOne({landlordusername})
-        if(userObject["password"] == landlordpassword){
-            // authentication successfull
-            return true
-        } else {
-            return false
-        }
-        
-    }
-    //Note to sarang: Are we going to use landlord username as their ID? This is for the tenets to attach their units to their landlords via ID
-
-
-    //TODO: call all serviceticketIDs and put them in a database
-
-    //TODO: create property database AND unit database
-=======
 
     verifyLogin = async (userinfo) => {
         var username = userinfo["username"]
@@ -114,5 +92,4 @@ exports.landlordDatabase = class landlordDatabase{
      
     // TODO: updateProgress
     // TODO: Make sure the password is hashed (Use this: https://coderrocketfuel.com/article/store-passwords-in-mongodb-with-node-js-mongoose-and-bcrypt#store-a-hashed-password-in-the-database)
->>>>>>> 3cebd1b11524dc0a9ba7e7115b672f9ad780fd77
 }
