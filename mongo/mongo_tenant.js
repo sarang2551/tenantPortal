@@ -17,8 +17,10 @@ exports.tenantDatabase = class tenantDatabase{
         const userObject = await collection.findOne({username})
         if(userObject["password"] == password){
             // authentication successfull
+            console.log("Successful Login")
             return true
         } else {
+            console.log("Incorrect Password")
             return false
         }
         
@@ -257,5 +259,9 @@ exports.tenantDatabase = class tenantDatabase{
         }
         
     }
+
+    // getServiceTickets = async () => {
+
+    // } 
 
 }
