@@ -1,5 +1,5 @@
 module.exports = function(app,database){
-    app.post('/landlord/landlordLogin', async(req,res)=>{
+    app.post('/landlord/verifyLogin', async(req,res)=>{
         const result = await database.verifyLogin(req.body)
         if(result){
             // send ok status
