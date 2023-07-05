@@ -10,6 +10,7 @@ class Notification {
       this.customAttributes = builder.customAttributes
     }
     validate(){
+        // required data for notifications
         if (!this.title) throw new Error("Missing title field when creating notification")
         if (!this.description) throw new Error("Missing description field when creating notification")
         if (!this.senderID) throw new Error("Missing senderID field when creating notification")

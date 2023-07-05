@@ -53,9 +53,10 @@ class Enviroment {
   }
 };
 
+const app = express()
 async function init(){
 
-const app = express()
+
 const cor = require('cors')
 const bodyParser = require("body-parser")
 app.use(cor())
@@ -74,4 +75,5 @@ const server = await app.listen(8000,()=>{
 
 require('./routes')(app,databaseClass)
 }
-init();
+init()
+module.exports = app

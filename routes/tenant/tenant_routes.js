@@ -1,12 +1,12 @@
 module.exports = function(app,database){
-    app.post('/tenant/tenantLogin', async(req,res)=>{
+    app.post('/tenant/verifyLogin', async(req,res)=>{
         const result = await database.verifyLogin(req.body)
         if(result){
             // send ok status
-            console.log("Login successful")
-            res.sendStatus(200)
-        } else {
-            res.sendStatus(401)
+            res.status(200).json({message: "Login Successful"});
+        } 
+        else {
+            res.status(500).json({message:"Login Unsuccessful"})
         }
     })
     app.post('/tenant/addServiceTicket',async(req,res)=>{
@@ -19,7 +19,7 @@ module.exports = function(app,database){
         }
     })
 
-    app.post('/tenant/updateServiceTicketProgress',async(req,res)=>{
+    app.put('/tenant/updateServiceTicketProgress',async(req,res)=>{
         const result = await database.updateServiceTicketProgress(req.body.serviceTicketID)
         if(result) res.sendStatus(200)
         else res.json({status:false})
@@ -28,8 +28,8 @@ module.exports = function(app,database){
     app.post('/tenant/requestRegisterLandlord',async(req,res)=>{
         // req.body should contain all the notification details
         const result = await database.requestRegisterLandlord(req.body)
-        if(result) res.sendStatus(200)
-        else res.sendStatus(404)
+        if(result) res.sendStatus(200).json({message:"Tenant successfully registered", result})
+        else res.sendStatus(404).json({message:"Tenant registration unsuccessful",result})
     })
 
     //Tenant registration
