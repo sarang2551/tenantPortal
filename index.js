@@ -35,10 +35,11 @@ class Enviroment {
         login:"tenants",
         addServiceTicket:"serviceTickets",
         deleteServiceTickets:"serviceTickets",
-        registerUnit:"units",
+        //registerUnit:"units",
         updateServiceTicketProgress:"serviceTickets",
-        registerLandlord:"landlords",
-        getAllNotifications:"landlords"
+        //registerLandlord:"landlords",
+        getAllNotifications:"landlords",
+        getAllServiceTickets:"serviceTickets"
       }
   }
   getLandlordUseCases = () => {

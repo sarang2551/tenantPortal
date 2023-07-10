@@ -1,5 +1,6 @@
 const {Notif_AddingServiceTicket,Notif_RegisterLandlordRequest,Notif_UpdateServiceTicket} = require("../models/Notif_Models")
 const assert = require('assert')
+const { ObjectId } = require('mongodb')
 
 exports.tenantDatabase = class tenantDatabase{
     database;
@@ -38,27 +39,6 @@ exports.tenantDatabase = class tenantDatabase{
         
     }
 
-    //Tenant registration
-    async registerTenant(userInfo) {
-        try {
-          const collection = this.database.collection(this.useCases.login);
-          const { username } = userInfo;
-          const existingTenant = await collection.findOne({ username });
-    
-          if (existingTenant) {
-            console.log("Tenant already exists.");
-            return false;
-          }
-
-          const result = await collection.insertOne(userInfo);
-          console.log("Tenant registered:", result.insertedId);
-          return true;
-        } catch (error) {
-          console.error("Error registering tenant:", error);
-          return false;
-        }
-      }
-
 
     addServiceTicket = async(serviceTicket) => {
         try {
@@ -67,6 +47,11 @@ exports.tenantDatabase = class tenantDatabase{
                 const landlord_object = await this.database.collection(this.useCases.registerLandlord).findOne({id:landlordID})
                 if(landlord_object == null){
                     console.log(`No landlord with id: ${landlordID}`)
+                    return false
+                }
+                const tenant_object = await this.database.collection("tenants").findOne({_id:ObjectId(tenantID)})
+                if(tenant_object == null){
+                    console.log(`No tenant with id: ${tenantID}`)
                     return false
                 }
                 const notification  = new Notif_AddingServiceTicket()
@@ -104,7 +89,7 @@ exports.tenantDatabase = class tenantDatabase{
                 // adding default parameters
                 var STDocument = {...serviceTicket,progressBar,progressStage,startDate}
 
-                STDocument = {landlordRef: landlord_object._id, ...STDocument}
+                STDocument = {landlordRef: landlord_object._id, tenantRef: tenant_object._id, ...STDocument}
                 const result = await collection.insertOne(STDocument);
                 console.log('Service Ticket added:', result.insertedId);
                 return true
@@ -206,73 +191,36 @@ exports.tenantDatabase = class tenantDatabase{
         }
 
     }
-    async registerUnit(data){
+    async getAllServiceTickets(id,res){
         try{
-            // {unitID, buildingID, unitNumber, images, landlordID, tenantID}
-        const collection = this.database.collection(this.useCases.registerUnit)
-        
-        await collection.insertOne(data,(err,result)=>{
-            if(err){
-                console.log(`Unable to registerUnit with ID: ${serviceTicketID}`)
-                return false
-            }
-        })
-
-        }catch(err){
-            console.log(`Error registering unit with ID: ${data["unitID"]} through tenant`)
-            return false
+            const collection = await this.database.collection(this.useCases.getAllServiceTickets)
+            collection.find({tenantRef:ObjectId(id)}).toArray((err,data)=>{
+                if (err) {
+                    console.error('Error finding documents:', err);
+                    res.status(500).send(err);
+                  }
+                res.send(data)
+            })
+            
+        }catch(error){
+            console.log(`Error getting all service tickets for tenant: ${id} Error: ${error}`)
+            res.status(500).json(error)
         }
-        
     }
-    async requestRegisterLandlord(notificationData){
+    async getAllNotifications(id,res){
         try{
-            // sends a notification to the landlord that the tenant wants to add them
-            const {landlordID,tenantID,tenantName,unit,monthlyRental} = notificationData
-            var description = `${tenantName} wants to add you as
-             landlord for unit ${unit}`
-             const landlordCollection = this.database.collection(this.useCases.registerLandlord)
-            const notification = new Notif_RegisterLandlordRequest()
-            .withTenantName(tenantName)
-            .withTenantUnit(unit)
-            .withMonthlyRental(monthlyRental)
-            .withDescription(description)
-            .withSenderID(tenantID)
-            .withRecipientID(landlordID)
-            .withCollection(landlordCollection)
-            .build()
-            const result = notification.send()
-            // const notification = {
-            //     landlordID,
-            //     tenantName,
-            //     description,
-            //     title:"Registration Request",
-            //     unit,
-            //     notifData,
-            //     accepted:false
-            // }
-            
-            
-            // const landlordObject = await landlordCollection.findOne({id:landlordID})
-            // if(landlordObject == null){
-            //     console.log(`Error finding landlord with ID: ${landlordID}`)
-            //     return false
-            // }
-            // var currentNotifications = landlordObject['notifications']
-            // var newNotifications = [notification,...currentNotifications]
-            // // sending notification
-            // landlordCollection.updateOne({id:landlordID},{$set:{notifications:newNotifications}},(err,result)=>{
-            //     if(err){
-            //         console.log(`Error sending addLandlord notification: ${err}`)
-            //         return false
-            //     } 
-            //     return true
-            // })
-            return result
-        }catch(err){
-            console.log(`Error registering landlord: ${err}`)
-            return false
+            const collection = await this.database.collection(this.useCases.getAllNotifications)
+            collection.find({tenantRef: ObjectId(id)}).toArray((err,data)=>{
+                if (err) {
+                    console.error('Error finding documents:', err);
+                    res.status(500).send(err);
+                  }
+                res.send(data)
+            })
+        }catch(error){
+            console.log(`Error getting all notifications for tenant: ${id} Error: ${error}`)
+            res.status(500).json(error)
         }
-        
     }
 
     assertObjectHasProperties(obj, properties) {
@@ -281,6 +229,68 @@ exports.tenantDatabase = class tenantDatabase{
           assert.ok(typeof obj[prop] === properties[prop], `Property '${prop}' is incorrect, expected: ${properties[prop]}, got: ${obj[prop]}`);
         }
       }
+
+          // async registerUnit(data){
+    //     try{
+    //         // {unitID, buildingID, unitNumber, images, landlordID, tenantID}
+    //     const collection = this.database.collection(this.useCases.registerUnit)
+        
+    //     await collection.insertOne(data,(err,result)=>{
+    //         if(err){
+    //             console.log(`Unable to registerUnit with ID: ${serviceTicketID}`)
+    //             return false
+    //         }
+    //     })
+
+    //     }catch(err){
+    //         console.log(`Error registering unit with ID: ${data["unitID"]} through tenant`)
+    //         return false
+    //     }
+        
+    // }
+
+      // async requestRegisterLandlord(notificationData){
+    //     try{
+    //         // sends a notification to the landlord that the tenant wants to add them
+    //         const {landlordID,tenantID,tenantName,unit,monthlyRental} = notificationData
+    //         var description = `${tenantName} wants to add you as
+    //          landlord for unit ${unit}`
+    //          const landlordCollection = this.database.collection(this.useCases.registerLandlord)
+    //         const notification = new Notif_RegisterLandlordRequest()
+    //         .withTenantName(tenantName)
+    //         .withTenantUnit(unit)
+    //         .withMonthlyRental(monthlyRental)
+    //         .withDescription(description)
+    //         .withSenderID(tenantID)
+    //         .withRecipientID(landlordID)
+    //         .withCollection(landlordCollection)
+    //         .build()
+    //         return notification.send()
+    //     }catch(err){
+    //         console.log(`Error registering landlord: ${err}`)
+    //         return false
+    //     }
+    // }   
     
+      //Tenant registration
+    // async registerTenant(userInfo) {
+    //     try {
+    //       const collection = this.database.collection(this.useCases.login);
+    //       const { username } = userInfo;
+    //       const existingTenant = await collection.findOne({ username });
+    
+    //       if (existingTenant) {
+    //         console.log("Tenant already exists.");
+    //         return false;
+    //       }
+
+    //       const result = await collection.insertOne(userInfo);
+    //       console.log("Tenant registered:", result.insertedId);
+    //       return true;
+    //     } catch (error) {
+    //       console.error("Error registering tenant:", error);
+    //       return false;
+    //     }
+    //   }
 
 }
