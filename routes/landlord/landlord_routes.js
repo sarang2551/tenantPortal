@@ -28,5 +28,16 @@ module.exports = function(app,database){
         const buildingsOwned = await database.getBuildings()
         res.send(`${JSON.stringify(buildingsOwned)}`);
     })
+    app.post('/landlord/hashPasswords', async(req,res)=>{
+        const result = await database.hashPasswords(req.body)
+        if(result){
+            res.sendStatus(200)
+            res.send('Hashing successful')
+        }
+        else{
+            res.sendStatus(401)
+            res.send('Error hashing password')
+        }
+    })
 
 }

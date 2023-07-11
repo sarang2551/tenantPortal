@@ -12,14 +12,24 @@ exports.landlordDatabase = class landlordDatabase{
         // find the user using the username
         const collection = this.database.collection(this.useCases.login)
         const userObject = await collection.findOne({username})
-        if(userObject["password"] == password){
-            // authentication successfull
-            console.log("Successful Login")
-            return true
-        } else {
-            console.log("Incorrect Password")
-            return false
-        }
+        //updated to hash the input password and compare to the hashed database password
+        bcrypt.compare(password,userObject["password"],function(error,ismatch ) {
+            if (error){
+                throw error
+            } else if (!ismatch){
+                console.log("Incorrect Password")
+            } else {
+                console.log("Successful Login")
+            }
+        })
+        // if(userObject["password"] == password){
+        //     // authentication successfull
+        //     console.log("Successful Login")
+        //     return true
+        // } else {
+        //     console.log("Incorrect Password")
+        //     return false
+        // }
     }
 
     async getLandlordNotifications(landlordData,res){
@@ -92,4 +102,28 @@ exports.landlordDatabase = class landlordDatabase{
      
     // TODO: updateProgress
     // TODO: Make sure the password is hashed (Use this: https://coderrocketfuel.com/article/store-passwords-in-mongodb-with-node-js-mongoose-and-bcrypt#store-a-hashed-password-in-the-database)
+    // NOTE use (npm i) to install new bcrypt package
+    hashPasswords = async (userinfo) =>{
+        var password = userinfo['password']
+        const collection = this.database.collection(this.useCases.login)
+        const userObject = await collection.findOne({username})
+        const saltRounds  = 5 //higher the number,more difficult to crack
+        bcrypt.genSalt(saltRounds,function (saltError,salt) {
+            if(saltError){ //if salting has issues
+                console.error("Error salting password")
+                throw saltError
+            } else {
+                bcrypt.hash(password,salt,function(hashError, hash){
+                    if (hashError){ // if hashing with declared salt has issues
+                        console.error("Error hashing string")
+                        throw hashError
+                    } else { //hash and save it to database of user
+                         userObject["password"] = hash
+                    }
+                })
+            }
+        })
+    }
+
+
 }
