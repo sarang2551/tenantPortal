@@ -13,21 +13,31 @@ module.exports = function(app,database){
         const result = await database.addServiceTicket(req.body)
         if(result){
             // send ok status
-            res.sendStatus(200)
+            res.json({status:200,message:"Added Successfully"})
         } else {
-            res.sendStatus(401)
+            res.json({status:500,message:"Unsuccessful Addition of Service Ticket"})
         }
     })
 
     app.put('/tenant/updateServiceTicketProgress',async(req,res)=>{
-        const result = await database.updateServiceTicketProgress(req.body.serviceTicketID)
-        if(result) res.sendStatus(200)
-        else res.json({status:false})
+        const result = await database.updateServiceTicketProgress(req.body._id)
+        if(result) res.json({status:200,message:"Updated Successfully"})
+        else res.json({status:401,message:"Updating unsuccessful"})
     })
 
     app.get('/tenant/getAllServiceTickets/:userID', async(req,res)=>{
         const userID = req.params.userID
         await database.getAllServiceTickets(userID,res)
+    })
+
+    app.delete('/tenant/deleteServiceTicket',async(req,res)=>{
+        try{
+            const result = await database.deleteServiceTicket(req.body._id)
+            if(result) res.json({status:200,message:"Ticket Deleted!"})
+        } catch(err){
+            res.json({status:500,message:err})
+        }
+        
     })
     
     // app.post('/tenant/requestRegisterLandlord',async(req,res)=>{

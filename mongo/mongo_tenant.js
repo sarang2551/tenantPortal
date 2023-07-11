@@ -44,7 +44,7 @@ exports.tenantDatabase = class tenantDatabase{
         try {
             if(this.database){
                 const {landlordID, tenantID, tenantName, unit} = serviceTicket
-                const landlord_object = await this.database.collection(this.useCases.registerLandlord).findOne({id:landlordID})
+                const landlord_object = await this.database.collection("landlords").findOne({id:landlordID})
                 if(landlord_object == null){
                     console.log(`No landlord with id: ${landlordID}`)
                     return false
@@ -105,9 +105,10 @@ exports.tenantDatabase = class tenantDatabase{
       }
     async updateServiceTicketProgress(serviceTicketID){
         try{
+            serviceTicketID = ObjectId(serviceTicketID)
             const collection = this.database.collection(this.useCases.updateServiceTicketProgress)
         // find the serviceTicket and check whether both landlord and tenant have confirmed progress
-        const serviceTicket = await collection.findOne({id:serviceTicketID})
+        const serviceTicket = await collection.findOne({_id:serviceTicketID})
         if(serviceTicket == null){
             console.log(`Service Ticket with ID: ${serviceTicketID} couldn't be found`)
             return false
@@ -175,8 +176,9 @@ exports.tenantDatabase = class tenantDatabase{
     }
     async deleteServiceTicket(serviceTicketID){
         try{
+            serviceTicketID = ObjectId(serviceTicketID)
             const collection = this.database.collection(this.useCases.deleteServiceTicket)
-            await collection.deleteOne({id:serviceTicketID},(err,result)=>{
+            await collection.deleteOne({_id:serviceTicketID},(err,result)=>{
                 if(err){
                     console.log(`Unable to delete Service Ticket with ID: ${serviceTicketID}`)
                     return false
@@ -186,7 +188,7 @@ exports.tenantDatabase = class tenantDatabase{
                 }
             })
         }catch(err){
-            console.log(`Error deleting Service Ticker with ID: ${serviceTicketID}`)
+            console.log(`Error deleting Service Ticker with ID: ${serviceTicketID} Error : ${err}`)
             return false
         }
 

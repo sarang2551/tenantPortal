@@ -34,7 +34,7 @@ class Enviroment {
       return {
         login:"tenants",
         addServiceTicket:"serviceTickets",
-        deleteServiceTickets:"serviceTickets",
+        deleteServiceTicket:"serviceTickets",
         //registerUnit:"units",
         updateServiceTicketProgress:"serviceTickets",
         //registerLandlord:"landlords",
