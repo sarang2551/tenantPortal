@@ -49,4 +49,14 @@ module.exports = function(app,database){
         if(result) res.sendStatus(200)
         else res.sendStatus(404)
     })
+
+    app.post('/tenant/hashPasswords', async(req,res)=>{
+        const result = await database.hashPasswords(req.body)
+        if(result){
+            res.send('Hashing successful')
+        }
+        else{
+            res.send('Error hashing password')
+        }
+    })
 }

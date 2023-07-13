@@ -1,3 +1,6 @@
+const bcrypt = require("bcryptjs")
+
+
 exports.landlordDatabase = class landlordDatabase{
     useCases;
     database;
@@ -9,12 +12,11 @@ exports.landlordDatabase = class landlordDatabase{
     verifyLogin = async (userinfo) => {
         var username = userinfo["username"] //use "landlord_1" to test
         var password = userinfo["password"] //use "test123" to test
-        const bcrypt = require("bcryptjs")
         // find the user using the username
         const collection = this.database.collection(this.useCases.login)
         const userObject = await collection.findOne({username})
         //updated to hash the input password and compare to the HASHED password stored
-        bcrypt.compare(password,userObject["passwordhash"],function(error,ismatch) {
+        bcrypt.compare(password,userObject["password"],function(error,ismatch) {
             if (error){
                 throw error
             } else if (!ismatch){
@@ -34,7 +36,7 @@ exports.landlordDatabase = class landlordDatabase{
         //     return false
         // }
 
-        //console.log(userObject["password"])//this is not retrieving anything
+        //console.log(userObject["password"])
     }
 
     async getLandlordNotifications(landlordData,res){
@@ -109,22 +111,24 @@ exports.landlordDatabase = class landlordDatabase{
     // TODO: Make sure the password is hashed (Use this: https://coderrocketfuel.com/article/store-passwords-in-mongodb-with-node-js-mongoose-and-bcrypt#store-a-hashed-password-in-the-database)
     // NOTE use (npm i) to install new bcrypt package
     hashPasswords = async (userinfo) =>{
-        var username = userinfo["username"] //use "landlord_1" to test
-        var password = userinfo["password"] //use "test123" to test
-        const bcrypt = require("bcryptjs")
-        const collection = this.database.collection(this.useCases.login)
-        const userObject = await collection.findOne({username})
+        var username =userinfo["username"] //use "landlord_1" to test
+        var password =userinfo["password"] //use "test123" to test
+        const collection = this.database.collection(this.useCases.login);
+        const userObject = await collection.findOne({username});
         const saltRounds  = 5                            //higher the number,more difficult to crack
         bcrypt.genSalt(saltRounds,function (saltError,salt) {
             if(saltError){ //if salting has issues
                 console.log("Error salting password")
+                throw(saltError)
             } else {
-                bcrypt.hash(password,salt,function(hashError, hash){
+                bcrypt.hash(password,salt,async function(hashError, hash){
                     if (hashError){                        // if hashing with declared salt has issues
                         console.log("Error hashing string")
                         throw(hashError)
                     } else {                               //hash and save it to database of user
-                         console.log(hash)
+                        userObject["password"]=hash
+                        console.log(hash) //what the new password should be
+                        console.log(userObject) //check if password field is changed to the hash
                     }
                 })
             }

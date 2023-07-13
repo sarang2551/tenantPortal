@@ -1,5 +1,6 @@
 const {Notif_AddingServiceTicket,Notif_RegisterLandlordRequest,Notif_UpdateServiceTicket} = require("../models/Notif_Models")
 const assert = require('assert')
+const bcrypt = require("bcryptjs")
 
 exports.tenantDatabase = class tenantDatabase{
     database;
@@ -18,18 +19,26 @@ exports.tenantDatabase = class tenantDatabase{
             // find the user using the username (username is email and should also be the ID)
             const collection = this.database.collection(this.useCases.login)
             const userObject = await collection.findOne({username})
-            if(userObject === null){
-                console.log("User not found")
-                return false
-            }
-            if(userObject["password"] == password){
-                // authentication successfull
-                console.log("Login Successful")
-                return true
+            //updated to hash the input password and compare to the HASHED password stored
+        bcrypt.compare(password,userObject["password"],function(error,ismatch) {
+            if (!ismatch){
+                console.log("Incorrect Password")
             } else {
-                console.log("Login Unsuccessful")
-                return false
+                console.log("Successful Login")
             }
+        })
+        //     if(userObject === null){
+        //         console.log("User not found")
+        //         return false
+        //     }
+        //     if(userObject["password"] == password){
+        //         // authentication successfull
+        //         console.log("Login Successful")
+        //         return true
+        //     } else {
+        //         console.log("Login Unsuccessful")
+        //         return false
+        //     }
         }catch(err){
             console.log(`Error verifing tenant login: ${err}`)
             return false
@@ -282,5 +291,29 @@ exports.tenantDatabase = class tenantDatabase{
         }
       }
     
+      hashPasswords = async (userinfo) =>{
+        var username =userinfo["username"] //use "RC_0002" to test
+        var password =userinfo["password"] //use "test123" to test
+        const collection = this.database.collection(this.useCases.login);
+        const userObject = await collection.findOne({username});
+        const saltRounds  = 5                            //higher the number,more difficult to crack
+        bcrypt.genSalt(saltRounds,function (saltError,salt) {
+            if(saltError){ //if salting has issues
+                console.log("Error salting password")
+                throw(saltError)
+            } else {
+                bcrypt.hash(password,salt,async function(hashError, hash){
+                    if (hashError){                        // if hashing with declared salt has issues
+                        console.log("Error hashing string")
+                        throw(hashError)
+                    } else {                               //hash and save it to database of user
+                        userObject["password"]=hash
+                        console.log(hash) //what the new password should be
+                        console.log(userObject) //check if password field is changed to the hash
+                    }
+                })
+            }
+        })
+    }
 
 }
