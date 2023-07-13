@@ -1,6 +1,6 @@
-const {Notif_AddingServiceTicket,Notif_RegisterLandlordRequest,Notif_UpdateServiceTicket} = require("../models/Notif_Models")
+const {Notif_AddingServiceTicket,Notif_Quotation,Notif_UpdateServiceTicket} = require("../models/Notif_Models")
 const assert = require('assert')
-const { ObjectId } = require('mongodb')
+const { ObjectId, ObjectID } = require('mongodb')
 
 exports.tenantDatabase = class tenantDatabase{
     database;
@@ -43,21 +43,26 @@ exports.tenantDatabase = class tenantDatabase{
     addServiceTicket = async(serviceTicket) => {
         try {
             if(this.database){
-                const {landlordID, tenantID, tenantName, unit} = serviceTicket
-                const landlord_object = await this.database.collection("landlords").findOne({id:landlordID})
+                const {userID, tenantName, unit} = serviceTicket
+                
+                const tenant_object = await this.database.collection("tenants").findOne({_id:ObjectId(userID)})
+                if(tenant_object == null){
+                    console.log(`No tenant with id: ${userID}`)
+                    return false
+                }
+                const landlordID = tenant_object.landlordID
+                const unitID = tenant_object.unitID
+                const landlord_object = await this.database.collection("landlords").findOne({_id:ObjectId(landlordID)})
                 if(landlord_object == null){
                     console.log(`No landlord with id: ${landlordID}`)
                     return false
                 }
-                const tenant_object = await this.database.collection("tenants").findOne({_id:ObjectId(tenantID)})
-                if(tenant_object == null){
-                    console.log(`No tenant with id: ${tenantID}`)
-                    return false
-                }
+                const unitObject = await this.database.collection("units").findOne({_id:unitID})
+                const {UnitID} = unitObject
                 const notification  = new Notif_AddingServiceTicket()
-                .withSenderID(tenantID)
+                .withSenderID(userID)
                 .withRecipientID(landlordID)
-                .withDescription(`Tenant ${tenantName} in unit ${unit} has added a Service Ticket`)
+                .withDescription(`New service ticket for ${UnitID}`)
                 .withCollection(this.recipientCollection)
                 .build()
                 notification.send()
@@ -89,7 +94,7 @@ exports.tenantDatabase = class tenantDatabase{
                 // adding default parameters
                 var STDocument = {...serviceTicket,progressBar,progressStage,startDate}
 
-                STDocument = {landlordRef: landlord_object._id, tenantRef: tenant_object._id, ...STDocument}
+                STDocument = {landlordRef: landlordID, tenantRef: ObjectId(userID),unitID,...STDocument}
                 const result = await collection.insertOne(STDocument);
                 console.log('Service Ticket added:', result.insertedId);
                 return true
@@ -217,7 +222,7 @@ exports.tenantDatabase = class tenantDatabase{
                     console.error('Error finding documents:', err);
                     res.status(500).send(err);
                   }
-                res.send(data)
+                res.json({data})
             })
         }catch(error){
             console.log(`Error getting all notifications for tenant: ${id} Error: ${error}`)
@@ -225,12 +230,66 @@ exports.tenantDatabase = class tenantDatabase{
         }
     }
 
+    async getUnitData(userID,res){
+        try{
+            const userObject = await this.database.collection("tenants").findOne({_id:ObjectId(userID)})
+            if(!userObject){
+                console.log(`Couldn't get unitData for ${userID} because it doesn't exist`)
+                res.json({status:500,message:"Couldn't find user"})
+            }
+            const unitID = userObject.unitID;
+            const unitObject = await this.database.collection(this.useCases.getUnitData).findOne({_id:unitID})
+            if(!unitObject){
+                console.log(`Couldn't find unit ${unitID} for user ${userID}`)
+                res.json({status:500,message:"Couldn't find unit "})
+            }
+            console.log(`Sending unitData for unit ${unitID}`)
+            res.json({status:200,unitData:unitObject})
+        }catch(err){
+            res.json({status:500, message:err})
+        }
+    }
+
+    async getUnitAndLandlordData(userID,res){
+        try{
+            const collection = this.database.collection(this.useCases.getUnitAndLandlordData)
+            const tenant_object = await collection.findOne({_id:ObjectId(userID)})
+            if(!tenant_object){
+                console.log(`Tenant with ID: ${userID} doesnt exist`)
+                res.json({status:500,message:"Tenant doesn't exist"})
+            }
+            const {landlordID, unitID} = tenant_object
+            const landlordObject = await this.database.collection("landlords").findOne({_id:landlordID})
+            const {landlordName} = landlordObject
+            if(!landlordName){
+                console.log(`Couldn't find landlord name`)
+                res.json({status:500,message:"Couldn't find landlord name"})
+                return
+            }
+            const UnitObject = await this.database.collection("units").findOne({_id:unitID})
+            
+            const {UnitID} = UnitObject
+            if(!UnitID){
+                console.log(`Couldn't find UnitID`)
+                res.json({status:500,message:"Couldn't find UnitID"})
+                return
+            }
+            console.log(`Sending unit & landlord information`)
+            res.json({status:200,tenantObject:{landlordName,UnitID}})
+        }catch(error){
+            console.log(`Error getting unit and landlord data for user: ${userID}`)
+            res.json({status:500,message:error})
+        }
+    }
+
+
     assertObjectHasProperties(obj, properties) {
         for (const prop in properties) {
           assert.ok(obj.hasOwnProperty(prop), `Object is missing property: ${prop}`);
           assert.ok(typeof obj[prop] === properties[prop], `Property '${prop}' is incorrect, expected: ${properties[prop]}, got: ${obj[prop]}`);
         }
       }
+
 
           // async registerUnit(data){
     //     try{

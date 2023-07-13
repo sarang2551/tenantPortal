@@ -22,14 +22,14 @@ class Notification {
     async send() {
         // Logic to actually send the notification
         const {collection, ...notification} = this
-        const recipientObject = await collection.findOne({id:this.recipientID})
+        const recipientObject = await collection.findOne({_id:this.recipientID})
         if(recipientObject == null){
             console.log(`Error sending notification to: ${this.recipientID}`)
             return false
         }
         var currentNotifications = recipientObject['notifications']
         var newNotifications = [notification,...currentNotifications] // add at index 0 because its the latest notification
-        await collection.updateOne({id:this.recipientID},{$set:{notifications:newNotifications}},(err,result)=>{
+        await collection.updateOne({_id:this.recipientID},{$set:{notifications:newNotifications}},(err,result)=>{
             if(err){
                 console.log(`Error sending addLandlord notification: ${err}`)
                 return false

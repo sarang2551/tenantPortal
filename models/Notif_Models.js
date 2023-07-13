@@ -24,28 +24,35 @@ class Notif_UpdateServiceTicket extends NotificationBuilder {
     }
 
 }
-class Notif_RegisterLandlordRequest extends NotificationBuilder {
+
+class Notif_Quotation extends NotificationBuilder{
     constructor(){
         super()
-        this.withTitle("Requesting Landlord Registration")
-        this.withCustomAttributes({accepted:false})
-    }
-    withTenantName(tenantName){
-        this.withCustomAttributes({tenantName})
-        return this
-    }
-    withTenantUnit(tenantUnit){
-        this.withCustomAttributes({tenantUnit})
-        return this
-    }
-    withMonthlyRental(monthlyRental){
-        this.withCustomAttributes({monthlyRental})
-        return this
     }
 }
 
+// class Notif_RegisterLandlordRequest extends NotificationBuilder {
+//     constructor(){
+//         super()
+//         this.withTitle("Requesting Landlord Registration")
+//         this.withCustomAttributes({accepted:false})
+//     }
+//     withTenantName(tenantName){
+//         this.withCustomAttributes({tenantName})
+//         return this
+//     }
+//     withTenantUnit(tenantUnit){
+//         this.withCustomAttributes({tenantUnit})
+//         return this
+//     }
+//     withMonthlyRental(monthlyRental){
+//         this.withCustomAttributes({monthlyRental})
+//         return this
+//     }
+// }
+
 module.exports = TenantNotifications = {
     Notif_AddingServiceTicket,
-    Notif_RegisterLandlordRequest,
-    Notif_UpdateServiceTicket
+    Notif_UpdateServiceTicket,
+    Notif_Quotation
 }
