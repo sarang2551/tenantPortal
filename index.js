@@ -32,7 +32,7 @@ class Enviroment {
   }
   getTenantUseCases = () => {
       return {
-        login:"tenants",
+        login:"tenantUser",
         addServiceTicket:"serviceTickets",
         deleteServiceTicket:"serviceTickets",
         //registerUnit:"units",
@@ -46,12 +46,15 @@ class Enviroment {
   }
   getLandlordUseCases = () => {
       return {
-        login:"landlords",
+        login: "landlords",
         updateServiceTicketProgress:"serviceTickets",
-        registerTenant:"tenants",
+        registerTenant: "tenants",
         getAllNotifications:"landlords",
         getPendingServiceTickets: "serviceTickets",
-        getBuildingsOwned: "buildings"
+        getBuildingsOwned: "buildings",
+        addLease: "leases",
+        showLeases: "leases",
+        addLeaseUnit: "leaseUnit"
       }
   }
 };
