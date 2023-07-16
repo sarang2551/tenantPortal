@@ -1,8 +1,7 @@
 const dotenv  = require('dotenv')
 const baseDatabase = require('./mongo/baseDatabase').baseDatabase
-const {json, urlencoded, rest,notFound, errorHandler } = require("@feathersjs/express")
 const express = require("@feathersjs/express")
-const {feathers} = require("@feathersjs/feathers")
+
 
 class Enviroment {
   dotenvPath;
@@ -66,8 +65,8 @@ async function init(){
 const cor = require('cors')
 const bodyParser = require("body-parser")
 app.use(cor())
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended:true}));
+app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.urlencoded({extended:true, limit:'50mb'}));
 
 // Parse JSON bodies (as sent by API clients)
 var mongoConfig = new Enviroment().getMongoConfig()

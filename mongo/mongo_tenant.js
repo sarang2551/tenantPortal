@@ -122,7 +122,9 @@ exports.tenantDatabase = class tenantDatabase{
         var notificationDescription = ""
         var notificationTitle = ""
         var finalStage = 4
-        var {progressStage, progressBar, endDate, title, unit, tenantID, landlordID} = serviceTicket 
+        var {progressStage, progressBar, endDate, title, unit, tenantRef, landlordRef} = serviceTicket 
+        const landlordID = ObjectId(landlordRef)
+        const tenantID = ObjectId(tenantRef)
         // progressStage: the stage the ticket is currently on
         // progressBar:  the overall progress handler
         // endDate: the date the service ticket reaches the final progressStage
