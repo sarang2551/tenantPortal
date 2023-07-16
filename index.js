@@ -32,7 +32,7 @@ class Enviroment {
   }
   getTenantUseCases = () => {
       return {
-        login:"tenantUser",
+        login:"tenants",
         addServiceTicket:"serviceTickets",
         deleteServiceTicket:"serviceTickets",
         //registerUnit:"units",
