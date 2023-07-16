@@ -23,8 +23,10 @@ exports.tenantDatabase = class tenantDatabase{
         bcrypt.compare(password,userObject["password"],function(error,ismatch) {
             if (!ismatch){
                 console.log("Incorrect Password")
+                return false
             } else {
                 console.log("Successful Login")
+                return true
             }
         })
         //     if(userObject === null){
@@ -291,11 +293,17 @@ exports.tenantDatabase = class tenantDatabase{
         }
       }
     
-      hashPasswords = async (userinfo) =>{
-        var username =userinfo["username"] //use "RC_0002" to test
-        var password =userinfo["password"] //use "test123" to test
+      async hashPasswords(user_name) {
+        try{
         const collection = this.database.collection(this.useCases.login);
-        const userObject = await collection.findOne({username});
+        const userObject = await collection.findOne({username:user_name});
+        //var username = use "RC_0002" to test
+        var password =userObject["password"] //use "test123" to test
+        if (userObject== null){
+            console.log(`cant find username ${userObject['username']}`)
+        } else{
+            console.log('user found')
+        }
         const saltRounds  = 5                            //higher the number,more difficult to crack
         bcrypt.genSalt(saltRounds,function (saltError,salt) {
             if(saltError){ //if salting has issues
@@ -308,12 +316,17 @@ exports.tenantDatabase = class tenantDatabase{
                         throw(hashError)
                     } else {                               //hash and save it to database of user
                         userObject["password"]=hash
-                        console.log(hash) //what the new password should be
-                        console.log(userObject) //check if password field is changed to the hash
+                        collection.updateOne({username:userObject['username']},{$set:{password:hash}})
+                        console.log("hash success")
                     }
                 })
             }
         })
+        return true
+    }catch(error){
+        console.log(`Error hashing password of ${user_name}`)
+        return false
     }
+}
 
 }

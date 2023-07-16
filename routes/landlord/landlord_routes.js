@@ -29,8 +29,8 @@ module.exports = function(app,database){
         res.send(`${JSON.stringify(buildingsOwned)}`);
     })
     
-    app.post('/landlord/hashPasswords', async(req,res)=>{
-        const result = await database.hashPasswords(req.body)
+    app.put('/landlord/hashPasswords', async(req,res)=>{
+        const result = await database.hashPasswords(req.body.user_name)
         if(result){
             res.send('Hashing successful')
         }

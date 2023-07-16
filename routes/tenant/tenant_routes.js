@@ -50,8 +50,8 @@ module.exports = function(app,database){
         else res.sendStatus(404)
     })
 
-    app.post('/tenant/hashPasswords', async(req,res)=>{
-        const result = await database.hashPasswords(req.body)
+    app.put('/tenant/hashPasswords', async(req,res)=>{
+        const result = await database.hashPasswords(req.body.user_name)
         if(result){
             res.send('Hashing successful')
         }
