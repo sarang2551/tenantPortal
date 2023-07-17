@@ -68,12 +68,5 @@ module.exports = function(app,database){
             res.json({status:500,message:"Unsuccessful Acceptance of Feedback"})
         }
     })    
-    
-    // app.post('/tenant/requestRegisterLandlord',async(req,res)=>{
-    //     // req.body should contain all the notification details
-    //     const result = await database.requestRegisterLandlord(req.body)
-    //     if(result) res.sendStatus(200).json({message:"Tenant successfully registered", result})
-    //     else res.sendStatus(404).json({message:"Tenant registration unsuccessful",result})
-    // })
 
 }

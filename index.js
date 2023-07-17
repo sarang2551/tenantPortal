@@ -48,6 +48,7 @@ class Enviroment {
         login: "landlords",
         updateServiceTicketProgress:"serviceTickets",
         registerTenant: "tenants",
+        getTenant:"tenants",
         getAllNotifications:"landlords",
         getPendingServiceTickets: "serviceTickets",
         getBuildingsOwned: "buildings",
@@ -55,7 +56,7 @@ class Enviroment {
         addUnit: "units",
         showLeases: "units",
         addLeaseUnit: "leaseUnit",
-        getBuildingInformation:"buildings"
+        getBuildingInformation:"units"
       }
   }
 };

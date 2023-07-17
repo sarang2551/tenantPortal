@@ -17,9 +17,9 @@ module.exports = function(app,database){
         const result = await database.addTenants(req.body)
         if(result){
             // send ok status
-            res.sendStatus(200)
+            res.json({status:200,message:"Tenant added successfully"})
         } else {
-            res.sendStatus(401)
+            res.json({status:500,message:"Unsuccessful addition of tenant"})
         }
     })
 
@@ -46,6 +46,11 @@ module.exports = function(app,database){
     app.get('/landlord/getBuildingInformation/:buildingID',async(req,res)=>{
         const buildingID = req.params.buildingID;
         await database.getBuildingInformation(buildingID,res)
+    })
+
+    app.get('/landlord/getTenantInfo/:tenantID',async(req,res)=>{
+        const tenantID = req.params.tenantID;
+        await database.getTenantInfo(tenantID,res)
     })
 
     app.post('/landlord/addBuilding',async(req,res)=>{
