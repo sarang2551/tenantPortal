@@ -51,9 +51,11 @@ class Enviroment {
         getAllNotifications:"landlords",
         getPendingServiceTickets: "serviceTickets",
         getBuildingsOwned: "buildings",
-        addLease: "leases",
-        showLeases: "leases",
-        addLeaseUnit: "leaseUnit"
+        addBuilding:"buildings",
+        addUnit: "units",
+        showLeases: "units",
+        addLeaseUnit: "leaseUnit",
+        getBuildingInformation:"buildings"
       }
   }
 };

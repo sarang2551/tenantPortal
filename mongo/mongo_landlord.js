@@ -48,17 +48,32 @@ exports.landlordDatabase = class landlordDatabase{
     }
 
     // Send the info as shown below
-    addLease = async (leaseinfo) => {
+    addUnit = async (leaseinfo) => {
         try {
             if(this.database){
-                const leaseCollection = this.database.collection(this.useCases.addLease);
-                // var leaseDoc = {
-                //     "LeaseID": userinfo["LeaseID"],
-                //     "CustomerID": userinfo["CustomerID"],
-
-                // }
-                const lease = await leaseCollection.insertOne(leaseinfo);
-                console.log("Lease Added")
+                const {unitNumber,
+                    buildingID,
+                    monthlyRental,
+                    userID,
+                    images} = leaseinfo
+                const unitCollection = this.database.collection(this.useCases.addUnit);
+                const buildingCollection = this.database.collection("buildings")
+                const buildingObject = await buildingCollection.findOne({_id:ObjectId(buildingID)})
+                if(!buildingObject){
+                    console.log(`When adding unit no building with ID: ${buildingID} found`)
+                    return false
+                }
+                var {unitsList} = buildingObject
+                const result = await unitCollection.insertOne({unitNumber,buildingRef:buildingID,monthlyRental,landlordRef:userID,images})
+                const unitID = result.insertedId
+                unitsList = [ObjectId(unitID),...unitsList]
+                await buildingCollection.updateOne({_id:Object(buildingID)},{$set:{unitsList}},(err,res)=>{
+                    if(err){
+                        console.log(`Error updating building list when adding unit: ${err}`)
+                        return false
+                    }
+                })
+                console.log('Unit added:', unitID);
                 return true
             }
         } 
@@ -106,22 +121,56 @@ exports.landlordDatabase = class landlordDatabase{
         return pendingST
     }        
 
-    // No need to send any data
-    getBuildings = async () => {
+    getBuildings = async (userID,res) => {
         const collection = this.database.collection(this.useCases.getBuildingsOwned)
-        const buildingCursor = await collection.find()
+        const buildingCursor = await collection.find({landlordRef:ObjectId(userID)})
+        if(!buildingCursor){
+            console.log(`No buildings found for landlord: ${userID}`)
+            res.send({status:500,message:"No buildings found"})
+        }
         var buildingsOwned = []
         while (await buildingCursor.hasNext()) {
             const buildingObject = await buildingCursor.next()
             buildingsOwned.push(buildingObject)
         }
-        return buildingsOwned
+        res.json({status:200,buildings:buildingsOwned})
+        return
+    }
+    async addBuilding(buildingData){
+        try{
+            const {userID,buildingName, address, postalCode} = buildingData
+            var unitsList = [] // start an empty list for units in this building that the landlord might have
+            const collection = this.database.collection(this.useCases.addBuilding)
+            const buildingObject = {landlordRef:ObjectId(userID),buildingName,address,postalCode,unitsList}
+            const result = await collection.insertOne(buildingObject)
+            console.log('Building added:', result.insertedId);
+            return true
+        }catch(error){
+            console.log(`Error adding building, Error: ${error}`)
+        }
+        
+    }
+
+    async getBuildingInformation(buildingID,res){
+        try{
+            const collection = this.database.collection(this.useCases.getBuildingInformation)
+            // a list of units for this building
+            const buildingObject = await collection.findOne({_id:ObjectId(buildingID)})
+            if(!buildingObject){
+                console.log(`Unable to find database object for building ${buildingID}`)
+                res.json({status:500,message:"Error getting building information"})
+            }
+            const {unitsList} = buildingObject
+            res.json({status:200,unitsList})
+        }catch(error){
+            console.log(`Error getting building information for building ${buildingID},Error: ${error}`)
+            res.json({status:500,message:"Error getting building information"})
+        }
     }
     
     // Just need to send ServiceTicketID Info
     updateProgress = async (serviceTicketID) => {
         try{
-            console.log(serviceTicketID)
             const collection = this.database.collection(this.useCases.updateServiceTicketProgress)
             // find the serviceTicket and check whether both landlord and tenant have confirmed progress
             const serviceTicket = await collection.findOne({serviceTicketID:serviceTicketID})

@@ -23,13 +23,13 @@ module.exports = function(app,database){
         }
     })
 
-    app.post('/landlord/addLease', async(req,res)=>{
-        const result = await database.addLease(req.body)
+    app.post('/landlord/addUnit', async(req,res)=>{
+        const result = await database.addUnit(req.body)
         if(result){
             // send ok status
-            res.sendStatus(200)
+            res.json({status:200,message:"Successfully added Unit"})
         } else {
-            res.sendStatus(401)
+            res.json({status:500,message:"Error adding Unit"})
         }
     })
 
@@ -38,9 +38,25 @@ module.exports = function(app,database){
         res.send(`${JSON.stringify(result)}`);
     })
 
-    app.get('/landlord/buildingsOwned', async(req,res) => {
-        const buildingsOwned = await database.getBuildings()
-        res.send(`${JSON.stringify(buildingsOwned)}`);
+    app.get('/landlord/buildingsOwned/:userID', async(req,res) => {
+        const userID = req.params.userID;
+        await database.getBuildings(userID,res)
+    })
+
+    app.get('/landlord/getBuildingInformation/:buildingID',async(req,res)=>{
+        const buildingID = req.params.buildingID;
+        await database.getBuildingInformation(buildingID,res)
+    })
+
+    app.post('/landlord/addBuilding',async(req,res)=>{
+        try{
+            const result = await database.addBuilding(req.body)
+            if(result){
+                res.json({status:200,message:"Building added successfully"})
+            }
+        }catch(error){
+            res.json({status:500,message:"Error adding building"})
+        }
     })
 
     app.put('/landlord/updateProgress', async(req,res)=>{
