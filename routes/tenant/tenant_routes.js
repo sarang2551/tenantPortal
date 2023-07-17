@@ -13,42 +13,68 @@ module.exports = function(app,database){
         const result = await database.addServiceTicket(req.body)
         if(result){
             // send ok status
-            res.sendStatus(200)
+            res.json({status:200,message:"Added Successfully"})
         } else {
-            res.sendStatus(401)
+            res.json({status:500,message:"Unsuccessful Addition of Service Ticket"})
         }
     })
 
     app.put('/tenant/updateServiceTicketProgress',async(req,res)=>{
-        const result = await database.updateServiceTicketProgress(req.body.serviceTicketID)
-        if(result) res.sendStatus(200)
-        else res.json({status:false})
+        const result = await database.updateServiceTicketProgress(req.body._id)
+        if(result) res.json({status:200,message:"Updated Successfully"})
+        else res.json({status:401,message:"Updating unsuccessful"})
     })
     
-    app.post('/tenant/requestRegisterLandlord',async(req,res)=>{
-        // req.body should contain all the notification details
-        const result = await database.requestRegisterLandlord(req.body)
-        if(result) res.sendStatus(200).json({message:"Tenant successfully registered", result})
-        else res.sendStatus(404).json({message:"Tenant registration unsuccessful",result})
+    app.get('/tenant/getUnitData/:userID',async(req,res)=>{
+        const userID = req.params.userID;
+        await database.getUnitData(userID,res)
     })
 
-    //Tenant registration
-    app.post('/tenant/accountRegistrationTenant',async(req,res)=>{
-        // req.body should contain all the notification details
+    app.get('/tenant/getAllServiceTickets/:userID', async(req,res)=>{
+        const userID = req.params.userID
+        await database.getAllServiceTickets(userID,res)
+    })
+
+    app.delete('/tenant/deleteServiceTicket',async(req,res)=>{
         try{
-            const result = await database.registerTenant(req.body)
-            if(result) res.sendStatus(200)
-        }catch(error){
-            res.sendStatus(500).json({error})
+            const result = await database.deleteServiceTicket(req.body._id)
+            if(result) res.json({status:200,message:"Ticket Deleted!"})
+        } catch(err){
+            res.json({status:500,message:err})
         }
         
     })
-
-    app.post('/tenant/registerUnit',async(req,res)=>{
-        const result = await database.registerUnit(req.body)
-        if(result) res.sendStatus(200)
-        else res.sendStatus(404)
+    app.get('/tenant/getUnit&LandlordData/:userID',async(req,res)=>{
+        const userID = req.params.userID
+        await database.getUnitAndLandlordData(userID,res)
     })
+
+    app.put('/tenant/updateFeedback', async(req,res) => {
+        const result = await database.updateFeedback(req.body)
+        if(result){
+            // send ok status
+            res.json({status:200,message:"Feedback updated!"})
+        } else {
+            res.json({status:500,message:"Unsuccessful updating of Feedback"})
+        }
+    })
+
+    app.put('/tenant/acceptQuotation', async(req,res) => {
+        const result = await database.acceptQuotation(req.body)
+        if(result){
+            // send ok status
+            res.json({status:200,message:"Quotation Accepted"})
+        } else {
+            res.json({status:500,message:"Unsuccessful Acceptance of Feedback"})
+        }
+    })    
+    
+    // app.post('/tenant/requestRegisterLandlord',async(req,res)=>{
+    //     // req.body should contain all the notification details
+    //     const result = await database.requestRegisterLandlord(req.body)
+    //     if(result) res.sendStatus(200).json({message:"Tenant successfully registered", result})
+    //     else res.sendStatus(404).json({message:"Tenant registration unsuccessful",result})
+    // })
 
     app.put('/tenant/hashPasswords', async(req,res)=>{
         const result = await database.hashPasswords(req.body.user_name)

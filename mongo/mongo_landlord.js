@@ -1,5 +1,7 @@
 const bcrypt = require("bcryptjs")
-
+const {Notif_AddingServiceTicket,Notif_RegisterLandlordRequest,Notif_UpdateServiceTicket} = require("../models/Notif_Models")
+const assert = require('assert')
+const { ObjectId } = require('mongodb')
 
 exports.landlordDatabase = class landlordDatabase{
     useCases;
@@ -7,39 +9,24 @@ exports.landlordDatabase = class landlordDatabase{
     constructor(config){
         this.database = config.database;
         this.useCases = config.landlordConfig
+        this.recipientCollection = this.database.collection("tenants")
     }
 
+    // Only need the username and password
     verifyLogin = async (userinfo) => {
-        var username = userinfo["username"] //use "landlord_1" to test
-        var password = userinfo["password"] //use "test123" to test
+        var username = userinfo["username"]
+        var password = userinfo["password"]
         // find the user using the username
         const collection = this.database.collection(this.useCases.login)
         const userObject = await collection.findOne({username})
-        //updated to hash the input password and compare to the HASHED password stored
-        bcrypt.compare(password,userObject["password"],function(error,ismatch) {
-            if (error){
-                console.log('Error connecting with serveer')
-                return false
-            } else if (!ismatch){
-                console.log("Incorrect Password")
-                return false
-            } else {
-                console.log("Successful Login")
-                return true
-            }
-        })
-
-
-        // if(userObject["password"] == password){
-        //     // authentication successfull
-        //     console.log("Successful Login")
-        //     return true
-        // } else {
-        //     console.log("Incorrect Password")
-        //     return false
-        // }
-
-        //console.log(userObject["password"])
+        if(userObject["password"] == password){
+            // authentication successfull
+            console.log("Successful Login")
+            return true
+        } else {
+            console.log("Incorrect Password")
+            return false
+        }
     }
 
     async getLandlordNotifications(landlordData,res){
@@ -101,21 +88,18 @@ exports.landlordDatabase = class landlordDatabase{
     addTenants = async (tenantinfo) => {
         try {
             if(this.database){
-                const collection = this.database.collection(this.useCases.registerTenant);
-                var tenantDocs = {
-                    "CustomerID": tenantinfo["CustomerID"],
-                    "CustomerName": tenantinfo["CustomerName"],
-                    "BusinessType": tenantinfo["BusinessType"],
-                    "PIN": tenantinfo["PIN"],
-                    "BRN": tenantinfo["BRN"],
-                    "Address": tenantinfo["Address"], 
-                    "PostalCode": tenantinfo["PostalCode"],
-                    "Username": tenantinfo["Username"],
-                    "Password": tenantinfo["Password"],
-                    "Notifications": tenantinfo["Notifications"]
-                }
-
-                const result = await collection.insertOne(tenantDocs);
+                const tenantCollection = this.database.collection(this.useCases.registerTenant);
+                //     var tenantDocs = {
+                //     "CustomerID": tenantinfo["CustomerID"],
+                //     "CustomerName": tenantinfo["CustomerName"],
+                //     "BusinessType": tenantinfo["BusinessType"],
+                //     "PIN": tenantinfo["PIN"],
+                //     "BRN": tenantinfo["BRN"],
+                //     "Address": tenantinfo["Address"], 
+                //     "PostalCode": tenantinfo["PostalCode"],
+                //     "Notifications": tenantinfo["Notifications"]
+                // }        
+                const tenantUser = await tenantCollection.insertOne(tenantinfo);
                 console.log("Tenant Added")
                 return true
             }
@@ -126,6 +110,7 @@ exports.landlordDatabase = class landlordDatabase{
         }
     }
 
+    // No need to send any data
     getPendingST = async () => {
         const collection = this.database.collection(this.useCases.getPendingServiceTickets)
         const pendingSTCursor = await collection.find({ progressStage: { $lt: 4 } })
@@ -187,7 +172,6 @@ exports.landlordDatabase = class landlordDatabase{
     // Just need to send ServiceTicketID Info
     updateProgress = async (serviceTicketID) => {
         try{
-            console.log(serviceTicketID)
             const collection = this.database.collection(this.useCases.updateServiceTicketProgress)
             // find the serviceTicket and check whether both landlord and tenant have confirmed progress
             const serviceTicket = await collection.findOne({serviceTicketID:serviceTicketID})
@@ -329,6 +313,9 @@ exports.landlordDatabase = class landlordDatabase{
             return false
         }
     }
+
+    // TODO: reject Quotation
+    // TODO: sendNego
 
     async hashPasswords(user_name){
         try{
