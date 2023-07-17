@@ -48,7 +48,12 @@ class Enviroment {
         registerTenant:"tenants",
         getAllNotifications:"landlords",
         getPendingServiceTickets: "serviceTickets",
-        getBuildingsOwned: "buildings"
+        getBuildingsOwned: "buildings",
+        addBuilding:"buildings",
+        addUnit: "units",
+        showLeases: "units",
+        addLeaseUnit: "leaseUnit",
+        getBuildingInformation:"buildings"
       }
   }
 };
