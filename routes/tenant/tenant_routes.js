@@ -1,13 +1,11 @@
 module.exports = function(app,database){
     app.post('/tenant/verifyLogin', async(req,res)=>{
-        const result = await database.verifyLogin(req.body)
-        if(result){
-            // send ok status
-            res.status(200).json({message: "Login Successful"});
-        } 
-        else {
-            res.status(500).json({message:"Login Unsuccessful"})
+        try{
+            await database.verifyLogin(req.body,res)
+        } catch(err){
+            res.status(500).json({message:`Error logging in username: ${req.body.username}`})
         }
+        
     })
     app.post('/tenant/addServiceTicket',async(req,res)=>{
         const result = await database.addServiceTicket(req.body)
@@ -34,6 +32,11 @@ module.exports = function(app,database){
         const userID = req.params.userID
         await database.getAllServiceTickets(userID,res)
     })
+    app.get('/tenant/getPieChartData/:userID',async(req,res)=>{
+        const userID = req.params.userID
+        await database.getSTForPieChart(userID,res)
+    })
+    
 
     app.delete('/tenant/deleteServiceTicket',async(req,res)=>{
         try{
