@@ -65,10 +65,14 @@ exports.landlordDatabase = class landlordDatabase{
                     return false
                 }
                 var {unitsList} = buildingObject
-                const result = await unitCollection.insertOne({unitNumber,buildingRef:buildingID,monthlyRental,landlordRef:userID,images})
+                const result = await unitCollection.insertOne({unitNumber,
+                    buildingRef:ObjectId(buildingID),
+                    monthlyRental,
+                    landlordRef:ObjectId(userID),
+                    images})
                 const unitID = result.insertedId
                 unitsList = [ObjectId(unitID),...unitsList]
-                await buildingCollection.updateOne({_id:Object(buildingID)},{$set:{unitsList}},(err,res)=>{
+                await buildingCollection.updateOne({_id:ObjectId(buildingID)},{$set:{unitsList}},(err,res)=>{
                     if(err){
                         console.log(`Error updating building list when adding unit: ${err}`)
                         return false
@@ -85,10 +89,22 @@ exports.landlordDatabase = class landlordDatabase{
     }
 
     // Send the info as shown below
-    addTenants = async (tenantinfo) => {
+    addTenants = async (tenantInfo) => {
         try {
             if(this.database){
+                const {unitRef,landlordRef} = tenantInfo
+                const document = {...tenantInfo,notifications:[],unitRef:ObjectId(unitRef),landlordRef:ObjectId(landlordRef)}
                 const tenantCollection = this.database.collection(this.useCases.registerTenant);
+                const tenantObject = await tenantCollection.insertOne(document)
+                const tenantID = tenantObject.insertedId
+                const unitCollection = this.database.collection("units")
+                await unitCollection.updateOne({_id:ObjectId(unitRef)},{$set:{tenantRef:tenantID}},(err,result)=>{
+                    if(err){
+                        console.log(`Error updating unit with id ${unitRef} for tenant addition. Error: ${err}`)
+                    }
+                })
+                console.log(`Added tenant with id: ${tenantID}`)
+                return true
                 //     var tenantDocs = {
                 //     "CustomerID": tenantinfo["CustomerID"],
                 //     "CustomerName": tenantinfo["CustomerName"],
@@ -105,9 +121,18 @@ exports.landlordDatabase = class landlordDatabase{
             }
         } 
         catch (error) {
-            console.error('Error adding document:', error)
+            console.error('Error adding tenant:', error)
             return false
         }
+    }
+    async getTenantInfo(tenantID,res){
+        const collection = this.database.collection(this.useCases.getTenant)
+        const tenantInfo = await collection.findOne({_id:ObjectId(tenantID)})
+        if(!tenantInfo){
+            console.log(`Unable to find tenant ${tenantID} for landlord`)
+            res.json({status:500,message:"Unable to find tenant"})
+        }
+        res.json({status:200,tenantInfo})
     }
 
     // No need to send any data
@@ -156,12 +181,17 @@ exports.landlordDatabase = class landlordDatabase{
         try{
             const collection = this.database.collection(this.useCases.getBuildingInformation)
             // a list of units for this building
-            const buildingObject = await collection.findOne({_id:ObjectId(buildingID)})
-            if(!buildingObject){
+            const unitsCursor = await collection.find({buildingRef:ObjectId(buildingID)})
+            if(!unitsCursor){
                 console.log(`Unable to find database object for building ${buildingID}`)
                 res.json({status:500,message:"Error getting building information"})
             }
-            const {unitsList} = buildingObject
+            const unitsList = []
+            while (await unitsCursor.hasNext()) {
+                const unitObject = await unitsCursor.next()
+                unitsList.push(unitObject)
+            }
+            // for units in this buildings
             res.json({status:200,unitsList})
         }catch(error){
             console.log(`Error getting building information for building ${buildingID},Error: ${error}`)
