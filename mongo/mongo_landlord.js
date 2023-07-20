@@ -13,7 +13,7 @@ exports.landlordDatabase = class landlordDatabase{
     }
 
     // Only need the username and password
-    verifyLogin = async (userinfo) => {
+    verifyLogin = async (userinfo,res) => {
         var username = userinfo["username"]
         var password = userinfo["password"]
         // find the user using the username
@@ -22,10 +22,10 @@ exports.landlordDatabase = class landlordDatabase{
         if(userObject["password"] == password){
             // authentication successfull
             console.log("Successful Login")
-            return true
+            res.status(200).json({userID:userObject._id})
         } else {
             console.log("Incorrect Password")
-            return false
+            res.status(500).json({message:"Incorrect Password"})
         }
     }
 

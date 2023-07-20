@@ -1,7 +1,7 @@
 const bcrypt = require("bcryptjs")
 const {Notif_AddingServiceTicket,Notif_Quotation,Notif_UpdateServiceTicket} = require("../models/Notif_Models")
 const assert = require('assert')
-const { ObjectId, ObjectID } = require('mongodb')
+const { ObjectId } = require('mongodb')
 
 exports.tenantDatabase = class tenantDatabase{
     database;
@@ -12,7 +12,7 @@ exports.tenantDatabase = class tenantDatabase{
         this.useCases = config.tenantConfig
         this.recipientCollection = this.database.collection("landlords")
     }
-    verifyLogin = async(userInfo) => {
+    verifyLogin = async(userInfo,res) => {
         try{
             this.assertObjectHasProperties(userInfo,{"username":"string","password":"string"})
             
@@ -22,15 +22,18 @@ exports.tenantDatabase = class tenantDatabase{
             const userObject = await collection.findOne({username})
             if(userObject === null){
                 console.log("User not found")
-                return false
+                res.status(500).json({message:"User not found"})
+                
             }
             if(userObject["password"] == password){
                 // authentication successfull
                 console.log("Login Successful")
-                return true
+                res.status(200).json({userID:userObject._id})
+                
             } else {
-                console.log("Login Unsuccessful")
-                return false
+                console.log("Password did not match")
+                res.status(500).json({message:"Password did not match"})
+                
             }
         }catch(err){
             console.log(`Error verifing tenant login: ${err}`)
@@ -115,7 +118,7 @@ exports.tenantDatabase = class tenantDatabase{
             // serviceTicketID = ObjectId(serviceTicketID)
             const collection = this.database.collection(this.useCases.updateServiceTicketProgress)
         // find the serviceTicket and check whether both landlord and tenant have confirmed progress
-        const serviceTicket = await collection.findOne({serviceTicketID:serviceTicketID})
+        const serviceTicket = await collection.findOne({_id:ObjectId(serviceTicketID)})
         if(serviceTicket == null){
             console.log(`Service Ticket with ID: ${serviceTicketID} couldn't be found`)
             return false
@@ -216,6 +219,43 @@ exports.tenantDatabase = class tenantDatabase{
         }catch(error){
             console.log(`Error getting all service tickets for tenant: ${id} Error: ${error}`)
             res.status(500).json(error)
+        }
+    }
+    async getSTForPieChart(userID,res){
+        try{
+            const collection =  this.database.collection(this.useCases.getAllServiceTickets)
+            await collection.aggregate([
+                {
+                    $match: {
+                      tenantRef: ObjectId(userID)
+                    }
+                  },
+                {
+                  $group: {
+                    _id: "$progressStage",
+                    count: { $sum: 1 }
+                  }
+                },
+                {
+                  $project: {
+                    progressStage: "$_id",
+                    count: 1,
+                    _id: 0
+                  }
+                }
+              ]).toArray(function (err, result) {
+                if (err) {
+                    console.log(`Error sending pie chart data: ${err}`)
+                    res.json({status:500,message:"Error getting pieChart data"})
+                } else {
+                    res.send(result)
+                }
+              });;
+            // [{ progressStage: 0, count: 1 },{ progressStage: 2, count: 1 }]
+            
+        }catch(err){
+            console.log(`Error sending pie chart data: ${err}`)
+            res.json({status:500,message:"Error getting pieChart data"})
         }
     }
     async getAllNotifications(id,res){
