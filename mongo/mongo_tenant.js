@@ -259,14 +259,14 @@ exports.tenantDatabase = class tenantDatabase{
     }
     async getAllNotifications(id,res){
         try{
-            const collection = await this.database.collection(this.useCases.getAllNotifications)
-            collection.find({tenantRef: ObjectId(id)}).toArray((err,data)=>{
-                if (err) {
-                    console.error('Error finding documents:', err);
-                    res.status(500).send(err);
-                  }
-                res.json({data})
-            })
+            const collection = this.database.collection(this.useCases.getAllNotifications)
+            const tenantObject = await collection.findOne({_id:ObjectId(id)})
+            if(!tenantObject){
+                console.log(`Unable to get all notifications for tenant ${id}`)
+                res.status(500).json(error)
+            }
+            const {notifications} = tenantObject
+            res.status(200).send(notifications)
         }catch(error){
             console.log(`Error getting all notifications for tenant: ${id} Error: ${error}`)
             res.status(500).json(error)

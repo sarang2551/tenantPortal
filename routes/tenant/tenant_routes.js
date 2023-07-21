@@ -36,6 +36,10 @@ module.exports = function(app,database){
         const userID = req.params.userID
         await database.getSTForPieChart(userID,res)
     })
+    app.get('/tenant/getNotifications/:userID',async(req,res)=>{
+        const userID = req.params.userID
+        await database.getAllNotifications(userID,res)
+    })
     
 
     app.delete('/tenant/deleteServiceTicket',async(req,res)=>{

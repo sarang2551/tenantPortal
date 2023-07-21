@@ -8,8 +8,9 @@ module.exports = function(app,database){
         
     })
 
-    app.get('/landlord/getlandlordNoti', async(req,res) => {
-        const result = await database.getLandlordNotifications(req.body, res)
+    app.get('/landlord/getNotifications/:userID', async(req,res) => {
+        const userID = req.params.userID;
+        await database.getLandlordNotifications(userID, res)
     })
 
     app.post('/landlord/addTenants', async(req,res)=>{
