@@ -33,9 +33,9 @@ module.exports = function(app,database){
         }
     })
 
-    app.get('/landlord/pendingST', async(req,res)=>{
-        const result = await database.getPendingST()
-        res.send(`${JSON.stringify(result)}`);
+    app.get('/landlord/getAllServiceTickets/:userID', async(req,res)=>{
+        const userID = req.params.userID;
+        await database.getPendingST(userID, res)
     })
 
     app.get('/landlord/buildingsOwned/:userID', async(req,res) => {
@@ -64,8 +64,8 @@ module.exports = function(app,database){
         }
     })
 
-    app.put('/landlord/updateProgress', async(req,res)=>{
-        const result = await database.updateProgress(req.body.serviceTicketID)
+    app.put('/landlord/updateServiceTicketProgress', async(req,res)=>{
+        const result = await database.updateProgress(req.body._id)
         if(result){
             // send ok status
             res.sendStatus(200)

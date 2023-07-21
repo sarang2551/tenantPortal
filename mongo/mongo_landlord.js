@@ -131,15 +131,15 @@ exports.landlordDatabase = class landlordDatabase{
     }
 
     // No need to send any data
-    getPendingST = async () => {
+    getPendingST = async (userID, res) => {
         const collection = this.database.collection(this.useCases.getPendingServiceTickets)
-        const pendingSTCursor = await collection.find({ progressStage: { $lt: 4 } })
+        const pendingSTCursor = await collection.find({landlordRef: ObjectId(userID)})
         var pendingST = []
         while (await pendingSTCursor.hasNext()) {
             const STobj = await pendingSTCursor.next();
             pendingST.push(STobj)
         }
-        return pendingST
+        res.send(pendingST)
     }        
 
     getBuildings = async (userID,res) => {
@@ -340,4 +340,9 @@ exports.landlordDatabase = class landlordDatabase{
 
     // TODO: reject Quotation
     // TODO: sendNego
+    // TODO: deleteTenants
+    // TODO: updateTenant Info
+    // TODO: In registerTenant and Landlord create a random password then call the hash function then add into the database
+    // TODO: When we registerTenants, then we take the number and email and sent to their email
+    // TODO: If no admin then landlord register themselves
 }
