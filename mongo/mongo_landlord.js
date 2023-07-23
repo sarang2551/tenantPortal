@@ -1,4 +1,4 @@
-const bcrypt = require("bcryptjs")
+const bcrypt = require("bcrypt")
 const {Notif_AddingServiceTicket,Notif_RegisterLandlordRequest,Notif_UpdateServiceTicket} = require("../models/Notif_Models")
 const assert = require('assert')
 const { ObjectId } = require('mongodb')
@@ -32,9 +32,9 @@ exports.landlordDatabase = class landlordDatabase{
     async getLandlordNotifications(landlordData,res){
         try{
             // get all notifications in a list
-            const landlordID = landlordData["landlordID"]
+            const landlordID =landlordData["landlordID"]
             const collection = this.database.collection(this.useCases.getAllNotifications)
-            const landlordObject = await collection.findOne({id:landlordID})
+            const landlordObject = await collection.findOne({_id:ObjectId(landlordID)}) //fixed this
             if(landlordObject == null){
                 let error = `Error retrieving notifications for landlord with ID: ${landlordID}`
                 console.log(error)

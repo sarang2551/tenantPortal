@@ -1,10 +1,11 @@
 module.exports = function(app,database){
     app.post('/landlord/verifyLogin', async(req,res)=>{
         try{
-            await database.verifyLogin(req.body,res)
+            await database.verifyLogin(res.body,res)
+            res.status(200).json({message:"Successfully logged in"})
         }catch(err){
-            res.status(500).json({message:"Error loging in landlord"})
-        }
+            res.status(500).json({message:"Error logging in landlord"})
+        }   
         
     })
 
