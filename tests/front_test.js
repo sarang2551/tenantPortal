@@ -1,7 +1,7 @@
 const {Builder, By, Key, until} = require('selenium-webdriver')
 
 // Test plan 1: 1. Login as a tenant, 2. Add a service ticket, 3. Update the newly added service ticket 4. Logout
-async function add_and_update_test(){
+async function tenant_add_and_update_test(){
     let driver = await new Builder().forBrowser("chrome").build()
     await driver.manage().window().maximize(); 
     await driver.get("http://localhost:3000/") // go to login page
@@ -12,8 +12,6 @@ async function add_and_update_test(){
     // type in password
     await driver.findElement(By.name("password")).sendKeys("test123",Key.RETURN)
     // submit login form
-    //await driver.findElement(By.xpath("/html/body/div/div/div/div[3]/form/div[4]/button")).click()
-    
     await driver.get("http://localhost:3000/serviceTicketPage");
     // click add button
     await driver.wait(until.elementLocated(By.xpath("/html/body/div[1]/div/div/div/div[1]/div[4]/div/div/span/button")), 10000);
@@ -42,5 +40,15 @@ async function add_and_update_test(){
     
 }
 
+async function landlord_update_function(){
+    let driver = await new Builder().forBrowser("chrome").build()
+    await driver.manage().window().maximize(); 
+    await driver.get("http://localhost:3000/") // go to login page
 
-add_and_update_test()
+    // type in username
+    await driver.findElement(By.name("username")).sendKeys("landlord_1",Key.RETURN)
+    // type in password
+    await driver.findElement(By.name("password")).sendKeys("test123",Key.RETURN)
+}
+
+tenant_add_and_update_test()

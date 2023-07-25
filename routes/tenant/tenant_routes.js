@@ -40,8 +40,14 @@ module.exports = function(app,database){
         const userID = req.params.userID
         await database.getAllNotifications(userID,res)
     })
-    
-
+    app.put('/tenant/changePassword',async(req,res)=>{
+        const result = await database.changePassword(req.body)
+        if(result){
+            res.status(200).json({message:"Changed password successfully"})
+        } else {
+            res.status(500).json({message:"Unsuccessfull password change"})
+        }
+    })
     app.delete('/tenant/deleteServiceTicket',async(req,res)=>{
         try{
             const result = await database.deleteServiceTicket(req.body._id)

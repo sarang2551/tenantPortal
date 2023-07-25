@@ -32,6 +32,7 @@ class Enviroment {
   getTenantUseCases = () => {
       return {
         login:"tenants",
+        changePassword: "tenants",
         addServiceTicket:"serviceTickets",
         deleteServiceTicket:"serviceTickets",
         updateServiceTicketProgress:"serviceTickets",

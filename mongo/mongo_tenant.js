@@ -22,12 +22,26 @@ exports.tenantDatabase = class tenantDatabase{
             if(userObject === null){
                 console.log("User not found")
                 res.status(500).json({message:"User not found"})
-                
             }
             if(userObject["password"] == password){
                 // authentication successfull
                 console.log("Login Successful")
-                res.status(200).json({userID:userObject._id})
+                var firstLogin = true // if first login then redirect to change password page
+                if(userObject.lastLoginDate !== undefined){
+                    firstLogin = false
+                    const today = new Date();
+                    const day = String(today.getDate()).padStart(2, '0');
+                    const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+                    const year = today.getFullYear();
+                    const lastLoginDate = `${day}:${month}:${year}`
+                    await collection.updateOne({_id:userObject._id},{$set:{lastLoginDate}},(err,result)=>{
+                        if(err){
+                            console.log(`Error updating last login date ${err}`)
+                            res.status(500).json({message:"Error updating last login date"})
+                        } 
+                    })
+                }
+                res.status(200).json({userID:userObject._id, firstLogin})
                 
             } else {
                 console.log("Password did not match")
@@ -39,7 +53,31 @@ exports.tenantDatabase = class tenantDatabase{
             return false
         }
         
-        
+    }
+
+    async changePassword(data){
+        try{
+            const {password,userID} = data
+            const today = new Date();
+            const day = String(today.getDate()).padStart(2, '0');
+            const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+            const year = today.getFullYear();
+            const lastLoginDate = `${day}:${month}:${year}` // only add this attribute when first password is changed
+            const collection = this.database.collection(this.useCases.changePassword)
+            /**TODO: Hash password here */
+            await collection.updateOne({_id:ObjectId(userID)},{$set:{password, lastLoginDate}},async(err,result)=>{
+                if(err){
+                    console.log(`Error updating password: ${err}`)
+                }
+                else{
+                    console.log(`Password changed successfully for user ${userID}`)
+                    return true
+                }
+            })
+        }catch(err){
+            console.log(`Error changing password. Error: ${err}`)
+            return false
+        }
     }
 
 
