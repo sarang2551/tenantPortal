@@ -1,3 +1,5 @@
+const nodemailer = require('nodemailer')
+const bcrypt = require("bcrypt")
 const {Notif_UpdateServiceTicket} = require("../models/Notif_Models")
 const assert = require('assert')
 const { ObjectId } = require('mongodb')
@@ -90,9 +92,18 @@ exports.landlordDatabase = class landlordDatabase{
     addTenants = async (tenantInfo) => {
         try {
             if(this.database){
-                const {unitRef,landlordRef} = tenantInfo
-                const document = {...tenantInfo,notifications:[],unitRef:ObjectId(unitRef),landlordRef:ObjectId(landlordRef)}
                 const tenantCollection = this.database.collection(this.useCases.registerTenant);
+                const {unitRef,landlordRef, email} = tenantInfo
+                while (true) {
+                    var plaintext_password = await this.generatePassword();
+                    var passwordExists = await tenantCollection.findOne({password:plaintext_password})
+                    if (!passwordExists) {
+                        break;
+                    }
+                }
+                // this.sendEmail(email)
+                var username = "test222" // TODO: Need to Change to be more dynamic
+                const document = {...tenantInfo,notifications:[],unitRef:ObjectId(unitRef),landlordRef:ObjectId(landlordRef), "password":plaintext_password, "username":username, "lastLoginDate":null}
                 const tenantObject = await tenantCollection.insertOne(document)
                 const tenantID = tenantObject.insertedId
                 const unitCollection = this.database.collection("units")
@@ -120,6 +131,33 @@ exports.landlordDatabase = class landlordDatabase{
             return false
         }
     }
+
+    deleteTenant = async (tenantID, res) => {
+        try {
+            const tenantcollection = this.database.collection(this.useCases.getTenant)
+            const tenantInfo = await tenantcollection.findOne({_id:ObjectId(tenantID)})
+            if(!tenantInfo) {
+                console.log(`Unable to find tenant ${tenantID} for landlord`)
+                res.json({status:500,message:"Unable to find tenant"})
+            }
+            await tenantcollection.deleteOne({_id:ObjectId(tenantID)},(err,result)=>{
+                if(err){
+                    console.log(`Unable to delete delete with ID: ${tenantID}`)
+                    return false
+                } else {
+                    console.log(`Deleted tenant ${tenantID}`)
+                    return true
+                }
+            })
+
+            res.json({status:200,message:`tenant with ID: ${tenantID} deleted`})
+        } catch(err){
+            console.log(`Error deleting tenant with ID: ${tenantID} Error : ${err}`)
+            return false
+        }
+    }
+
+
     async getTenantInfo(tenantID,res){
         const collection = this.database.collection(this.useCases.getTenant)
         const tenantInfo = await collection.findOne({_id:ObjectId(tenantID)})
@@ -338,11 +376,40 @@ exports.landlordDatabase = class landlordDatabase{
         }
     }
 
+    generatePassword = async() => {
+        var length = 12,
+            charset = "@#$&*0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$&*0123456789abcdefghijklmnopqrstuvwxyz",
+            password = "";
+        for (var i = 0, n = charset.length; i < length; ++i) {
+            password += charset.charAt(Math.floor(Math.random() * n));
+        }
+        return password;
+    }
+
+    // sendEmail = async(email) => {
+    //     var transporter = nodemailer.createTransport({
+    //         host: 'smtp.gmail.com',
+    //         port: 465,
+    //         secure: true, // SSL
+    //         auth: {
+    //           user: 'dylantohdylantoh@gmail.com',
+    //           pass: '$eN$m!ygkwgKLjT5'
+    //         }
+    //     });
+          
+    //     const info = await transporter.sendMail({
+    //         from: 'dylantohdylantoh@gmail.com',
+    //         to: email,
+    //         subject: 'Sending Email using Node.js',
+    //         text: 'That was easy!'
+    //     });
+
+    //     console.log(info.messageId);
+    // }
+
     // TODO: reject Quotation
-    // TODO: sendNego
-    // TODO: deleteTenants
-    // TODO: updateTenant Info
-    // TODO: In registerTenant and Landlord create a random password then call the hash function then add into the database
+    // TODO: updateTenant Info (Contact Info, name, image)
+    // TODO: In registerTenant and Landlord create a random password then call the hash function then add into the database (DONE)
     // TODO: When we registerTenants, then we take the number and email and sent to their email
     // TODO: If no admin then landlord register themselves
 }

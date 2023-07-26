@@ -5,7 +5,6 @@ module.exports = function(app,database){
         }catch(err){
             res.status(500).json({message:"Error loging in landlord"})
         }
-        
     })
 
     app.get('/landlord/getNotifications/:userID', async(req,res) => {
@@ -53,6 +52,11 @@ module.exports = function(app,database){
         await database.getTenantInfo(tenantID,res)
     })
 
+    app.delete('/landlord/deleteTenant/:tenantID', async(req,res) => {
+        const tenantID = req.params.tenantID;
+        await database.deleteTenant(tenantID,res)
+    })
+
     app.post('/landlord/addBuilding',async(req,res)=>{
         try{
             const result = await database.addBuilding(req.body)
@@ -88,7 +92,6 @@ module.exports = function(app,database){
         const result = await database.getAvailableLease()
         res.send(`${JSON.stringify(result)}`);
     })
-
 
 
 }

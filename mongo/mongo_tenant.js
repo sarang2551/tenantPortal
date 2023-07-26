@@ -1,3 +1,4 @@
+const bcrypt = require("bcrypt")
 const {Notif_AddingServiceTicket,Notif_Quotation,Notif_UpdateServiceTicket} = require("../models/Notif_Models")
 const assert = require('assert')
 const { ObjectId } = require('mongodb')
@@ -19,34 +20,40 @@ exports.tenantDatabase = class tenantDatabase{
             // find the user using the username (username is email and should also be the ID)
             const collection = this.database.collection(this.useCases.login)
             const userObject = await collection.findOne({username})
+            console.log(userObject)
             if(userObject === null){
                 console.log("User not found")
                 res.status(500).json({message:"User not found"})
             }
-            if(userObject["password"] == password){
-                // authentication successfull
+            else if (userObject.lastLoginDate == null && userObject["password"] == password) {
                 console.log("Login Successful")
                 var firstLogin = true // if first login then redirect to change password page
-                if(userObject.lastLoginDate !== undefined){
-                    firstLogin = false
-                    const today = new Date();
-                    const day = String(today.getDate()).padStart(2, '0');
-                    const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based
-                    const year = today.getFullYear();
-                    const lastLoginDate = `${day}:${month}:${year}`
-                    await collection.updateOne({_id:userObject._id},{$set:{lastLoginDate}},(err,result)=>{
-                        if(err){
-                            console.log(`Error updating last login date ${err}`)
-                            res.status(500).json({message:"Error updating last login date"})
-                        } 
-                    })
-                }
                 res.status(200).json({userID:userObject._id, firstLogin})
-                
-            } else {
-                console.log("Password did not match")
-                res.status(500).json({message:"Password did not match"})
-                
+            }
+            else {
+                firstLogin = false
+                const today = new Date();
+                const day = String(today.getDate()).padStart(2, '0');
+                const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+                const year = today.getFullYear();
+                const lastLoginDate = `${day}:${month}:${year}`
+                await collection.updateOne({_id:userObject._id},{$set:{lastLoginDate}},(err,result)=>{
+                    if(err){
+                        console.log(`Error updating last login date ${err}`)
+                        res.status(500).json({message:"Error updating last login date"})
+                    } 
+                })
+                bcrypt.compare(password, userObject.password).then(result => {
+                    if (result) {
+                        // Authentication successful
+                        console.log("Login Successful")
+                        res.status(200).json({userID:userObject._id, firstLogin})
+                    }
+                    else {
+                        console.log("Password did not match")
+                        res.status(500).json({message:"Password did not match"})
+                    }
+                }) 
             }
         }catch(err){
             console.log(`Error verifing tenant login: ${err}`)
@@ -65,22 +72,38 @@ exports.tenantDatabase = class tenantDatabase{
             const lastLoginDate = `${day}:${month}:${year}` // only add this attribute when first password is changed
             const collection = this.database.collection(this.useCases.changePassword)
             /**TODO: Hash password here */
-            await collection.updateOne({_id:ObjectId(userID)},{$set:{password, lastLoginDate}},async(err,result)=>{
-                if(err){
-                    console.log(`Error updating password: ${err}`)
-                }
-                else{
-                    console.log(`Password changed successfully for user ${userID}`)
-                    return true
-                }
-            })
+            const saltRounds  = 5                            //higher the number,more difficult to crack
+                bcrypt.genSalt(saltRounds,function (saltError,salt) {
+                    if(saltError){ //if salting has issues
+                        console.log("Error salting password")
+                        throw(saltError)
+                    } else {
+                        bcrypt.hash(password,salt,function(hashError, hashed_password) {
+                            if (hashError){                        // if hashing with declared salt has issues
+                                console.log("Error Hashing Password")
+                                throw(hashError)
+                            }
+                            else {
+                                collection.updateOne({_id:ObjectId(userID)},{$set:{password:hashed_password, lastLoginDate}},async(err,result)=>{
+                                    if(err){
+                                        console.log(`Error updating password: ${err}`)
+                                    }
+                                    else{
+                                        console.log(`Password changed successfully for user ${userID}`)
+                                        return true
+                                    }
+                                })
+                            }
+                        })
+                    }
+                })
         }catch(err){
             console.log(`Error changing password. Error: ${err}`)
             return false
         }
     }
 
-
+    
     addServiceTicket = async(serviceTicket) => {
         try {
             if(this.database){
@@ -149,7 +172,7 @@ exports.tenantDatabase = class tenantDatabase{
           console.error('Error adding service ticket:', error)
           return false
         }
-      }
+    }
     async updateServiceTicketProgress(serviceTicketID){
         try{
             // serviceTicketID = ObjectId(serviceTicketID)
@@ -472,10 +495,9 @@ exports.tenantDatabase = class tenantDatabase{
           assert.ok(obj.hasOwnProperty(prop), `Object is missing property: ${prop}`);
           assert.ok(typeof obj[prop] === properties[prop], `Property '${prop}' is incorrect, expected: ${properties[prop]}, got: ${obj[prop]}`);
         }
-      }
+    }
 
-
-          // async registerUnit(data){
+        // async registerUnit(data){
     //     try{
     //         // {unitID, buildingID, unitNumber, images, landlordID, tenantID}
     //     const collection = this.database.collection(this.useCases.registerUnit)
