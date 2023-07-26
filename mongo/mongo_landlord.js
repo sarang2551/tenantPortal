@@ -101,8 +101,8 @@ exports.landlordDatabase = class landlordDatabase{
                         break;
                     }
                 }
-                // this.sendEmail(email)
                 var username = "test222" // TODO: Need to Change to be more dynamic
+                this.sendEmail(email, plaintext_password, username)
                 const document = {...tenantInfo,notifications:[],unitRef:ObjectId(unitRef),landlordRef:ObjectId(landlordRef), "password":plaintext_password, "username":username, "lastLoginDate":null}
                 const tenantObject = await tenantCollection.insertOne(document)
                 const tenantID = tenantObject.insertedId
@@ -386,30 +386,34 @@ exports.landlordDatabase = class landlordDatabase{
         return password;
     }
 
-    // sendEmail = async(email) => {
-    //     var transporter = nodemailer.createTransport({
-    //         host: 'smtp.gmail.com',
-    //         port: 465,
-    //         secure: true, // SSL
-    //         auth: {
-    //           user: 'dylantohdylantoh@gmail.com',
-    //           pass: '$eN$m!ygkwgKLjT5'
-    //         }
-    //     });
+    sendEmail = async(email, password, username) => {
+        var transporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true, // SSL
+            auth: {
+              user: 'dylantohdylantoh@gmail.com',
+              pass: 'nrclmwinedytorbl'
+            }
+        });
           
-    //     const info = await transporter.sendMail({
-    //         from: 'dylantohdylantoh@gmail.com',
-    //         to: email,
-    //         subject: 'Sending Email using Node.js',
-    //         text: 'That was easy!'
-    //     });
+        const info = await transporter.sendMail({
+            from: 'dylantohdylantoh@gmail.com',
+            to: email,
+            subject: 'Tenant Account Created',
+            html: `
+            <h1>Your Tenant Account has been created successfully</h1>
+            <p>Click <a href="http://localhost:3000/">here</a> to log into your account and change your password</p>
+            <p>Username: ${username}</p>
+            <p>Password: ${password}</p>
+            `
+            
+        });
 
-    //     console.log(info.messageId);
-    // }
+        console.log(`Email sent to ${email}`);
+    }
 
     // TODO: reject Quotation
     // TODO: updateTenant Info (Contact Info, name, image)
-    // TODO: In registerTenant and Landlord create a random password then call the hash function then add into the database (DONE)
-    // TODO: When we registerTenants, then we take the number and email and sent to their email
     // TODO: If no admin then landlord register themselves
 }
