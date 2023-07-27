@@ -18,9 +18,7 @@ module.exports = function(app,database){
     })
 
     app.put('/tenant/updateServiceTicketProgress',async(req,res)=>{
-        const result = await database.updateServiceTicketProgress(req.body._id)
-        if(result) res.json({status:200,message:"Updated Successfully"})
-        else res.json({status:401,message:"Updating unsuccessful"})
+        await database.updateServiceTicketProgress(req.body._id,res)
     })
     
     app.get('/tenant/getUnitData/:userID',async(req,res)=>{
@@ -41,7 +39,7 @@ module.exports = function(app,database){
         await database.getAllNotifications(userID,res)
     })
     app.put('/tenant/changePassword',async(req,res)=>{
-        const result = await database.changePassword(req.body)
+        const result = database.changePassword(req.body)
         if(result){
             res.status(200).json({message:"Changed password successfully"})
         } else {
@@ -63,17 +61,17 @@ module.exports = function(app,database){
     })
 
     app.put('/tenant/updateFeedback', async(req,res) => {
-        const result = await database.updateFeedback(req.body)
+        const result = database.updateFeedback(req.body)
         if(result){
             // send ok status
-            res.json({status:200,message:"Feedback updated!"})
+            res.status(200).json({message:"Feedback updated!"})
         } else {
-            res.json({status:500,message:"Unsuccessful updating of Feedback"})
+            res.status(500).json({message:"Unsuccessful updating of Feedback"})
         }
     })
 
-    app.put('/tenant/acceptQuotation', async(req,res) => {
-        const result = await database.acceptQuotation(req.body)
+    app.put('/tenant/updateQuotation', async(req,res) => {
+        const result = await database.updateQuotation(req.body)
         if(result){
             // send ok status
             res.json({status:200,message:"Quotation Accepted"})

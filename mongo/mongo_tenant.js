@@ -29,11 +29,7 @@ exports.tenantDatabase = class tenantDatabase{
                 var firstLogin = true // if first login then redirect to change password page
                 if(userObject.lastLoginDate !== undefined){
                     firstLogin = false
-                    const today = new Date();
-                    const day = String(today.getDate()).padStart(2, '0');
-                    const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based
-                    const year = today.getFullYear();
-                    const lastLoginDate = `${day}:${month}:${year}`
+                    const lastLoginDate = this.getTodaysDate()
                     await collection.updateOne({_id:userObject._id},{$set:{lastLoginDate}},(err,result)=>{
                         if(err){
                             console.log(`Error updating last login date ${err}`)
@@ -41,7 +37,7 @@ exports.tenantDatabase = class tenantDatabase{
                         } 
                     })
                 }
-                res.status(200).json({userID:userObject._id, firstLogin})
+                res.status(200).json({userID:userObject._id, firstLogin,tenantName:userObject.tenantName})
                 
             } else {
                 console.log("Password did not match")
@@ -81,10 +77,10 @@ exports.tenantDatabase = class tenantDatabase{
     }
 
 
-    addServiceTicket = async(serviceTicket) => {
+    addServiceTicket = async(serviceTicketData) => {
         try {
             if(this.database){
-                const {userID, tenantName, unit} = serviceTicket
+                const {userID,...serviceTicket} = serviceTicketData
                 
                 const tenant_object = await this.database.collection("tenants").findOne({_id:ObjectId(userID)})
                 if(tenant_object == null){
@@ -99,11 +95,11 @@ exports.tenantDatabase = class tenantDatabase{
                     return false
                 }
                 const unitObject = await this.database.collection("units").findOne({_id:unitID})
-                const {UnitID} = unitObject
+                const {unitNumber} = unitObject
                 const notification  = new Notif_AddingServiceTicket()
                 .withSenderID(userID)
                 .withRecipientID(landlordID)
-                .withDescription(`New service ticket for ${UnitID}`)
+                .withDescription(`New service ticket for ${unitNumber}`)
                 .withCollection(this.recipientCollection)
                 .build()
                 notification.send()
@@ -127,12 +123,9 @@ exports.tenantDatabase = class tenantDatabase{
                 const collection = this.database.collection(this.useCases.addServiceTicket);
 
                 const progressStage = 0
-                var starting_state = [false,false]
-                var progressBar = []
-                for(let i = 1; i < 5; i++) progressBar.push(starting_state)
-                progressBar[0][0] = true;
-                const date = new Date()
-                const startDate = `${date.getDay()}:${date.getMonth()}:${date.getFullYear()}`
+                // Processing request, Accept/Reject Quotation, Work in Progress, Feedback
+                var progressBar = [[true,false],[false,false],[false,false],[false,false]]
+                const startDate = this.getTodaysDate()
                 // adding default parameters
                 var STDocument = {...serviceTicket,progressBar,progressStage,startDate}
 
@@ -150,7 +143,7 @@ exports.tenantDatabase = class tenantDatabase{
           return false
         }
       }
-    async updateServiceTicketProgress(serviceTicketID){
+    async updateServiceTicketProgress(serviceTicketID,res){
         try{
             // serviceTicketID = ObjectId(serviceTicketID)
             const collection = this.database.collection(this.useCases.updateServiceTicketProgress)
@@ -158,11 +151,12 @@ exports.tenantDatabase = class tenantDatabase{
         const serviceTicket = await collection.findOne({_id:ObjectId(serviceTicketID)})
         if(serviceTicket == null){
             console.log(`Service Ticket with ID: ${serviceTicketID} couldn't be found`)
-            return false
+            res.status(500).json({message:"Service Ticket couldn't be found"})
+            return
         }
         var notificationDescription = ""
         var notificationTitle = ""
-        var finalStage = 4
+        var finalStage = 3
         var {progressStage, progressBar, endDate, title, unit, tenantRef, landlordRef} = serviceTicket 
         const landlordID = ObjectId(landlordRef)
         const tenantID = ObjectId(tenantRef)
@@ -178,11 +172,8 @@ exports.tenantDatabase = class tenantDatabase{
                 progressStage += 1
             } else{
                 // the final stage is completed
-                var newDate = new Date()
-                const year = newDate.getFullYear();
-                const month = String(newDate.getMonth() + 1).padStart(2, '0'); // Months are zero-based
-                const day = String(newDate.getDate()).padStart(2, '0');
-                endDate = `${day}-${month}-${year}`
+                progressStage += 1
+                endDate = this.getTodaysDate()
                 notificationDescription = `Service Ticket: ${title} for ${unit} was successfully completed on ${endDate}`
                 notificationTitle = `Service Ticket Completion for unit ${unit}`
             }
@@ -195,7 +186,8 @@ exports.tenantDatabase = class tenantDatabase{
             notificationTitle = `Service Ticket Progress Update for unit ${unit}`
         } else if(curLevel[0] == true){
             console.log("tenant has already updated the progress for this stage")
-            return false
+            res.status(500).json({message:"Tenant has already updated the progress for this stage"})
+            return
         }
         const notification = new Notif_UpdateServiceTicket()
         .withDescription(notificationDescription)
@@ -206,20 +198,22 @@ exports.tenantDatabase = class tenantDatabase{
         .withCustomAttributes({progressStage})
         .build()
         const result = await notification.send()
-        if(!result) throw new Error(`Notification for updating Service Ticket ${serviceTicketID} was not sent!`)
-        collection.updateOne({_id:serviceTicket["_id"]},{$set: { progressBar, progressStage: progressStage, endDate }},(err,result)=>{
+        if(!result) res.status(500).json({message:"Notification for updating Service Ticket was not sent!"})
+        await collection.updateOne({_id:serviceTicket["_id"]},{$set: { progressBar, progressStage: progressStage, endDate }},(err,result)=>{
             if(err){
                 console.log(err)
-                return false
+                res.status(500).json({message:"Notification for updating Service Ticket was not sent!"})
+                return
             } else {
-                console.log(`Updated Service Ticket ${serviceTicketID}: ${result}`)
+                console.log(`Updated Service Ticket ${serviceTicketID}`)
+                res.status(200).json({message:"Update successfull",stepNumber:progressStage})
+                return
             }
         })
-        return true
 
         }catch(err){
             console.log(`Error updating Service Ticket progress with ID: ${serviceTicketID} Error: ${err}`)
-            return false
+            return
         }
         
     }
@@ -349,14 +343,14 @@ exports.tenantDatabase = class tenantDatabase{
             }
             const UnitObject = await this.database.collection("units").findOne({_id:unitID})
             
-            const {UnitID} = UnitObject
-            if(!UnitID){
+            const {unitName} = UnitObject
+            if(!unitName){
                 console.log(`Couldn't find UnitID`)
                 res.json({status:500,message:"Couldn't find UnitID"})
                 return
             }
             console.log(`Sending unit & landlord information`)
-            res.json({status:200,tenantObject:{landlordName,UnitID}})
+            res.json({status:200,tenantObject:{landlordName,unitName}})
         }catch(error){
             console.log(`Error getting unit and landlord data for user: ${userID}`)
             res.json({status:500,message:error})
@@ -414,57 +408,103 @@ exports.tenantDatabase = class tenantDatabase{
     }
 
     // Just need to send serviceTicketID and quotationAcceptedbyTenant
-    acceptQuotation = async (updateST) => {
+    updateQuotation = async (updateST) => {
+        console.log(updateST)
         try{
+            const {userID,serviceTicketID,quotationAcceptance} = updateST
             const collection = this.database.collection(this.useCases.updateServiceTicketProgress)
             // find the serviceTicket and check whether both landlord and tenant have confirmed progress
-            var serviceTicketID = updateST["serviceTicketID"]
-            const serviceTicket = await collection.findOne({serviceTicketID:serviceTicketID})
+            const serviceTicket = await collection.findOne({_id:ObjectId(serviceTicketID)})
             if(serviceTicket == null){
                 console.log(`Service Ticket with ID: ${serviceTicketID} couldn't be found`)
                 return false
             }
             var notificationDescription = ""
             var notificationTitle = ""
-            var {quotationAcceptanceDate,
+            var {
                 title,
                 unit, 
                 tenantRef, 
-                landlordRef} = serviceTicket 
-            var {quotationAcceptedbyTenant} = updateST
+                landlordRef,
+                progressBar,
+                progressStage
+            } = serviceTicket 
+            var quotationAcceptanceDate = this.getTodaysDate()
+            if(quotationAcceptance == true){
+                // landlord has already submitted a quotation and progress stage will be increased
+               
+                notificationDescription = `Service Ticket: ${title} for ${unit} was successfully accepted on ${quotationAcceptanceDate}`
+                notificationTitle = `Quotation Acceptance for unit ${unit}`
+                
+                const notification = new Notif_UpdateServiceTicket()
+                .withDescription(notificationDescription)
+                .withTitle(notificationTitle)
+                .withCollection(this.recipientCollection)
+                .withSenderID(tenantRef)
+                .withRecipientID(landlordRef)
+                .withCustomAttributes({})
+                .build()
+                const result = notification.send()
+                if(!result) throw new Error(`Notification for updating Service Ticket ${serviceTicketID} was not sent!`)
 
-            var newDate = new Date()
-            const year = newDate.getFullYear();
-            const month = String(newDate.getMonth() + 1).padStart(2, '0'); // Months are zero-based
-            const day = String(newDate.getDate()).padStart(2, '0');
-            quotationAcceptanceDate = `${day}-${month}-${year}`
-            notificationDescription = `Service Ticket: ${title} for ${unit} was successfully accepted on ${quotationAcceptanceDate}`
-            notificationTitle = `Quotation Acceptance for unit ${unit}`
+                progressBar[progressStage][0] = true // now it'll be [[true,true],[true,true],[false,false],[false,false]]
+                progressStage += 1 // progressStage 2 (3 on UI) now
 
-            const notification = new Notif_UpdateServiceTicket()
-            .withDescription(notificationDescription)
-            .withTitle(notificationTitle)
-            .withCollection(this.recipientCollection)
-            .withSenderID(tenantRef)
-            .withRecipientID(landlordRef)
-            .withCustomAttributes({})
-            .build()
-            const result = await notification.send()
-            if(!result) throw new Error(`Notification for updating Service Ticket ${serviceTicketID} was not sent!`)
-            collection.updateOne({_id:serviceTicket["_id"]},{$set: { quotationAcceptedbyTenant: quotationAcceptedbyTenant, quotationAcceptanceDate: quotationAcceptanceDate }},(err,result)=>{
-                if(err){
-                    console.log(err)
-                    return false
-                } else {
-                    console.log(`Quotation Accepted for ${serviceTicketID}: ${result}`)
-                }
-            })
-            return true
+                await collection.updateOne({_id:ObjectId(serviceTicketID)},
+                {$set: {quotationAcceptanceDate, progressBar, progressStage }},(err,result)=>{
+                    if(err){
+                        console.log(err)
+                        return false
+                    } else {
+                        console.log(`Quotation Accepted for ${serviceTicketID}`)
+                        return true
+                    }
+                })
+                return true
+            } else {
+                // reject the quotation and remove the quotationAmount and quotationDocument attribute from the service ticket object
+                notificationDescription = `Service Ticket: Quotation for ticket: ${title} for ${unit} was rejected on ${quotationAcceptanceDate}`
+                notificationTitle = `Quotation Rejected for unit ${unit}`
+
+                const notification = new Notif_UpdateServiceTicket()
+                .withCollection(this.recipientCollection)
+                .withTitle(notificationTitle)
+                .withDescription(notificationDescription)
+                .withRecipientID(landlordRef)
+                .withSenderID(tenantRef)
+                .build()
+                const result = notification.send()
+                if(!result) throw new Error(`Notification for rejecting quotation for serviceTicketID: ${serviceTicketID} , was not sent!`)
+                
+                // progressStage remains at 1 (2 at UI)
+                progressBar[progressStage][1] = false  // now it'll be [[true,true],[false,false],[false,false],[false,false]]
+
+                await collection.updateOne({_id:ObjectId(serviceTicketID)},
+                {$unset:{quotationDocument:null,quotationAmount:null},$set:{progressBar}},
+                (err,result)=>{
+                    if(err){
+                        console.log(`Error updating service ticket object when rejecting quotation ${err}`)
+                        return false
+                    } else {
+                        console.log(`Quotation Rejected for ${serviceTicketID}`)
+                        return true
+                    }
+                })
+            }
+            
             
         }catch(err){
-            console.log(`Error updating Service Ticket Acceptance with ID: ${serviceTicketID} Error: ${err}`)
+            console.log(`Error updating Service Ticket Acceptance: Error: ${err}`)
             return false
         }
+    }
+
+    getTodaysDate(){
+        const today = new Date();
+        const day = String(today.getDate()).padStart(2, '0');
+        const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+        const year = today.getFullYear();
+        return `${day}:${month}:${year}`
     }
 
     assertObjectHasProperties(obj, properties) {
@@ -474,68 +514,5 @@ exports.tenantDatabase = class tenantDatabase{
         }
       }
 
-
-          // async registerUnit(data){
-    //     try{
-    //         // {unitID, buildingID, unitNumber, images, landlordID, tenantID}
-    //     const collection = this.database.collection(this.useCases.registerUnit)
-        
-    //     await collection.insertOne(data,(err,result)=>{
-    //         if(err){
-    //             console.log(`Unable to registerUnit with ID: ${serviceTicketID}`)
-    //             return false
-    //         }
-    //     })
-
-    //     }catch(err){
-    //         console.log(`Error registering unit with ID: ${data["unitID"]} through tenant`)
-    //         return false
-    //     }
-        
-    // }
-
-      // async requestRegisterLandlord(notificationData){
-    //     try{
-    //         // sends a notification to the landlord that the tenant wants to add them
-    //         const {landlordID,tenantID,tenantName,unit,monthlyRental} = notificationData
-    //         var description = `${tenantName} wants to add you as
-    //          landlord for unit ${unit}`
-    //          const landlordCollection = this.database.collection(this.useCases.registerLandlord)
-    //         const notification = new Notif_RegisterLandlordRequest()
-    //         .withTenantName(tenantName)
-    //         .withTenantUnit(unit)
-    //         .withMonthlyRental(monthlyRental)
-    //         .withDescription(description)
-    //         .withSenderID(tenantID)
-    //         .withRecipientID(landlordID)
-    //         .withCollection(landlordCollection)
-    //         .build()
-    //         return notification.send()
-    //     }catch(err){
-    //         console.log(`Error registering landlord: ${err}`)
-    //         return false
-    //     }
-    // }   
-    
-      //Tenant registration
-    // async registerTenant(userInfo) {
-    //     try {
-    //       const collection = this.database.collection(this.useCases.login);
-    //       const { username } = userInfo;
-    //       const existingTenant = await collection.findOne({ username });
-    
-    //       if (existingTenant) {
-    //         console.log("Tenant already exists.");
-    //         return false;
-    //       }
-
-    //       const result = await collection.insertOne(userInfo);
-    //       console.log("Tenant registered:", result.insertedId);
-    //       return true;
-    //     } catch (error) {
-    //       console.error("Error registering tenant:", error);
-    //       return false;
-    //     }
-    //   }
 
 }
