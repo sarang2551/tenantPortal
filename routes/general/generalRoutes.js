@@ -7,4 +7,9 @@ module.exports = function(app,database){
             res.status(401).json({error})
         }
     })
+    app.get('/general/getServiceTicketInfo/:serviceTicketID',async(req,res)=>{
+        const serviceTicketID = req.params.serviceTicketID;
+        console.log(`Received id: ${serviceTicketID}`)
+        await database.getServiceTicketInfo(serviceTicketID,res);
+    })
 }

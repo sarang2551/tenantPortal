@@ -90,6 +90,15 @@ module.exports = function(app,database){
             res.status(500).json({message:"Unsuccessful updating of Quotation"})
         }
     })
+    app.put('/landlord/submitFeedback',async(req,res)=>{
+        const result = database.submitFeedback(req.body)
+        if(result){
+            // send ok status
+            res.status(200).json({message:"Feedback updated!"})
+        } else {
+            res.status(500).json({message:"Unsuccessful updating of feedback"})
+        }
+    })
 
     app.get('/landlord/availableLease', async(req,res)=>{
         const result = await database.getAvailableLease()

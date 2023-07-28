@@ -360,6 +360,24 @@ exports.landlordDatabase = class landlordDatabase{
             return false
         }
     }
+    async submitFeedback(feedbackForm){
+        try{
+            var {serviceTicketID, ...feedbackObj} = feedbackForm
+            const collection = this.database.collection(this.useCases.submitFeedback)
+            await collection.updateOne({_id:ObjectId(serviceTicketID)},{$set:{landlordFeedback:feedbackObj}},(err,result)=>{
+                if(err){
+                    console.log(`Error updating landlord feedback for service ticket with id: ${serviceTicketID}`)
+                    return false
+                } else{
+                    console.log(`Added landlord feedback for ticket with id ${serviceTicketID}`)
+                    return true
+                }
+            })
+            return true
+        }catch(err){
+            console.log(`Error sending feedback for landlord: ${err}`)
+        }
+    }
     
     getTodaysDate(){
         const today = new Date();

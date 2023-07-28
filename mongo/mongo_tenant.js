@@ -498,6 +498,25 @@ exports.tenantDatabase = class tenantDatabase{
             return false
         }
     }
+    
+    async submitFeedback(feedbackForm){
+        try{
+            var {serviceTicketID, ...feedbackObj} = feedbackForm
+            const collection = this.database.collection(this.useCases.submitFeedback)
+            await collection.updateOne({_id:ObjectId(serviceTicketID)},{$set:{tenantFeedback:feedbackObj}},(err,result)=>{
+                if(err){
+                    console.log(`Error updating tenant feedback for service ticket with id: ${serviceTicketID}`)
+                    return false
+                } else{
+                    console.log(`Added tenant feedback for ticket with id ${serviceTicketID}`)
+                    return true
+                }
+            })
+            return true
+        }catch(err){
+            console.log(`Error sending feedback for tenant: ${err}`)
+        }
+    }
 
     getTodaysDate(){
         const today = new Date();

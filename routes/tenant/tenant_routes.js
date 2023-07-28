@@ -60,8 +60,8 @@ module.exports = function(app,database){
         await database.getUnitAndLandlordData(userID,res)
     })
 
-    app.put('/tenant/updateFeedback', async(req,res) => {
-        const result = database.updateFeedback(req.body)
+    app.put('/tenant/submitFeedback', async(req,res) => {
+        const result = database.submitFeedback(req.body)
         if(result){
             // send ok status
             res.status(200).json({message:"Feedback updated!"})
