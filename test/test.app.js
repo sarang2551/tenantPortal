@@ -13,9 +13,9 @@ describe('Tenant Authentication and Registration API', () => {
       .post('/tenant/verifyLogin')
       .send({ username: 'RC_0001', password: 'test123' })
       .end((err, res) => {
-        // Now, check the response and the status code.
+
         expect(res).to.have.status(200);
-        // Add more assertions here if needed.
+
         done(); // Call done to indicate test completion
       });
   });
@@ -37,12 +37,12 @@ describe('Tenant Authentication and Registration API', () => {
 
 describe('Tenant Routes', () => {
 
-//service ticket sarang acct
+//service ticket godzilla with landlord ID acct
   it('should add a new service ticket', (done) => {
     chai
       .request(`http://localhost:${PORT}`)
       .post('/tenant/addServiceTicket')
-      .send({ userID: '64c10618621105084f0ee1bc', tenantName: 'hefantest', unit: 'Unit 1' })
+      .send({ userID: '64ad758ce3307f7723aa6330', tenantName: 'hefan3', unit: 'Unit 3' })
       .end((err, res) => {
         expect(res).to.have.status(200);
         expect(res.body).to.have.property('status').to.equal(200);
@@ -55,7 +55,7 @@ describe('Tenant Routes', () => {
     chai
       .request(`http://localhost:${PORT}`)
       .put('/tenant/updateServiceTicketProgress')
-      .send({ _id: '64af9e579456074014691709' })
+      .send({ _id: '64c5fcfcaea880170d4a199c' })
       .end((err, res) => {
         expect(res).to.have.status(200);
         expect(res.body).to.have.property('status').to.equal(200);
@@ -91,7 +91,7 @@ describe('Tenant Routes', () => {
     chai
       .request(`http://localhost:${PORT}`)
       .delete('/tenant/deleteServiceTicket')
-      .send({ _id: 'valid_service_ticket_id' })
+      .send({ _id: '64c60ace17845f1a2c5988c3' }) //sr hefan2
       .end((err, res) => {
         expect(res).to.have.status(200);
         expect(res.body).to.have.property('status').to.equal(200);
@@ -129,7 +129,7 @@ describe('Tenant Routes', () => {
     chai
       .request(`http://localhost:${PORT}`)
       .put('/tenant/acceptQuotation')
-      .send({ serviceTicketID: '64af9e579456074014691709', quotationAcceptedbyTenant: true })
+      .send({ serviceTicketID: '64c5fcfcaea880170d4a199c', quotationAcceptedbyTenant: true })
       .end((err, res) => {
         expect(res).to.have.status(200);
         expect(res.body).to.have.property('status').to.equal(200);
@@ -180,9 +180,9 @@ describe('Landlord Routes', () => {
         .request(`http://localhost:${PORT}`)
         .post('/landlord/addUnit')
         .send({
-          unitNumber: '22',
+          unitNumber: '3',
           buildingID: '64b40ad206aee34f7aeb7e3b',
-          monthlyRental: 2000,
+          monthlyRental: 300,
           userID: '647f393928c6e292aebd9999',
           images: ['img1.jpg', 'img2.jpg'],
         })
@@ -253,16 +253,16 @@ describe('Landlord Routes', () => {
         });
     });
   
-    // Test for adding a new building
+    // Test for adding a new building by landlord 1
     it('should add a new building owned by a landlord', (done) => {
       chai
         .request(`http://localhost:${PORT}`)
         .post('/landlord/addBuilding')
         .send({
-          userID: 'leehefan',
-          buildingName: 'test3',
+          userID: '64873c12bd2e5989a5e90e1c',
+          buildingName: 'hftest2',
           address: '123 Sample St',
-          postalCode: '12345',
+          postalCode: '666',
         })
         .end((err, res) => {
           expect(res).to.have.status(200);
@@ -274,7 +274,7 @@ describe('Landlord Routes', () => {
   
     // Test for updating service ticket progress
     it('should update the progress of a service ticket for a landlord', (done) => {
-      const sampleServiceTicketID = '64af9db69456074014691708'; //or  SR00001
+      const sampleServiceTicketID = '64c5fcfcaea880170d4a199c'; //  hefantest unit 1
       chai
         .request(`http://localhost:${PORT}`)
         .put('/landlord/updateServiceTicketProgress')
@@ -287,7 +287,7 @@ describe('Landlord Routes', () => {
   
     // Test for updating quotation
     it('should update the quotation for a service ticket', (done) => {
-      const sampleServiceTicketID = '64af9db69456074014691708';
+      const sampleServiceTicketID = '64c5fcfcaea880170d4a199c';
       const sampleQuotationUpdate = {
         serviceTicketID: sampleServiceTicketID,
         quotationRequired: true,
