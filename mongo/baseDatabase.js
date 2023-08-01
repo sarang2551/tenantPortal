@@ -1,5 +1,5 @@
 
-const {MongoClient} = require('mongodb')
+const {MongoClient, ObjectId} = require('mongodb')
 
 const {tenantDatabase} = require('./mongo_tenant')
 const {landlordDatabase} = require('./mongo_landlord')
@@ -36,6 +36,19 @@ exports.baseDatabase =  class baseDatabase {
               );
         }catch(err){
             throw new Error(`Error updating seen status of notification with ID: ${notifID}`)
+        }
+    }
+    getServiceTicketInfo = async(serviceTicketID,res) =>{
+        try{
+            const collection = this.database.collection("serviceTickets")
+            const serviceTicketObject = await collection.findOne({_id:ObjectId(serviceTicketID)})
+            if(!serviceTicketID){
+                console.log(`Error retrieving info for ticket with id: ${serviceTicketID}`)
+                res.status(500).json({message:"Error retrieving info for ticket"})
+            }
+            res.status(200).json(serviceTicketObject)
+        }catch(err){
+            console.log(`Error retrieving data for serviceTicket with id: ${serviceTicketID}`)
         }
     }
 

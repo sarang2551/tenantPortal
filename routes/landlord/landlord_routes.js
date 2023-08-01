@@ -6,6 +6,19 @@ module.exports = function(app,database){
             res.status(500).json({message:"Error loging in landlord"})
         }
     })
+    app.post('/landlord/registerLandlord',async(req,res)=>{
+        try{
+            const result = await database.registerLandlord(req.body)
+            if(result){
+                res.status(200).json({message:"Successfully added landlord"})
+            }else{
+                res.status(500).json({message:`Error registering landlord: Result: ${result}`})
+            }
+        }catch(err){
+            console.log(`Error registering landlord: ${err}`)
+            res.status(500).json({message:"Error registering landlord"})
+        }
+    })
 
     app.get('/landlord/getNotifications/:userID', async(req,res) => {
         const userID = req.params.userID;
@@ -69,22 +82,25 @@ module.exports = function(app,database){
     })
 
     app.put('/landlord/updateServiceTicketProgress', async(req,res)=>{
-        const result = await database.updateProgress(req.body._id)
-        if(result){
-            // send ok status
-            res.sendStatus(200)
-        } else {
-            res.sendStatus(401)
-        }
+        await database.updateProgress(req.body._id,res)
     })
 
     app.put('/landlord/updateQuotation', async(req,res) => {
-        const result = await database.updateQuotation(req.body)
+        const result = database.updateQuotation(req.body)
         if(result){
             // send ok status
-            res.json({status:200,message:"Quotation updated!"})
+            res.status(200).json({message:"Quotation updated!"})
         } else {
-            res.json({status:500,message:"Unsuccessful updating of Quotation"})
+            res.status(500).json({message:"Unsuccessful updating of Quotation"})
+        }
+    })
+    app.put('/landlord/submitFeedback',async(req,res)=>{
+        const result = database.submitFeedback(req.body)
+        if(result){
+            // send ok status
+            res.status(200).json({message:"Feedback updated!"})
+        } else {
+            res.status(500).json({message:"Unsuccessful updating of feedback"})
         }
     })
 

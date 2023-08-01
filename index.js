@@ -39,12 +39,14 @@ class Enviroment {
         getAllNotifications:"tenants",
         getAllServiceTickets:"serviceTickets",
         getUnitData:"units",
-        getUnitAndLandlordData:"tenants"
+        getUnitAndLandlordData:"tenants",
+        submitFeedback:"serviceTickets"
       }
   }
   getLandlordUseCases = () => {
       return {
         login: "landlords",
+        registerLandlord:"landlords",
         updateServiceTicketProgress:"serviceTickets",
         registerTenant: "tenants",
         getTenant:"tenants",
@@ -55,7 +57,8 @@ class Enviroment {
         addUnit: "units",
         showLeases: "units",
         addLeaseUnit: "leaseUnit",
-        getBuildingInformation:"units"
+        getBuildingInformation:"units",
+        submitFeedback:"serviceTickets"
       }
   }
 };
