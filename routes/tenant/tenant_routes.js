@@ -86,8 +86,8 @@ module.exports = function(app,database){
             // send ok status
             res.json({status:200,message:"Quotation Accepted"})
         } else {
-            res.json({status:500,message:"Unsuccessful Acceptance of Feedback"})
+            res.json({status:500,message:"Unsuccessful Acceptance of Quotation"})
         }
-    })    
-
+    })   
+    
 }

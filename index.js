@@ -50,6 +50,7 @@ class Enviroment {
         updateServiceTicketProgress:"serviceTickets",
         registerTenant: "tenants",
         getTenant:"tenants",
+        updateTenant: "tenants",
         getAllNotifications:"landlords",
         getPendingServiceTickets: "serviceTickets",
         getBuildingsOwned: "buildings",

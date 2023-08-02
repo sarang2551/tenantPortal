@@ -35,6 +35,16 @@ module.exports = function(app,database){
         }
     })
 
+    app.put('/landlord/editTenant/:userID', async(req,res)=>{
+        const result = await database.editTenant(req.params.userID, req.body)
+        if(result){
+            // send ok status
+            res.json({status:200,message:"Edited Tenant Successfully"})
+        } else {
+            res.json({status:500,message:"Unsuccessful editing of Tenant"})
+        }
+    })
+
     app.post('/landlord/addUnit', async(req,res)=>{
         const result = await database.addUnit(req.body)
         if(result){

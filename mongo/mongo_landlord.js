@@ -174,6 +174,31 @@ exports.landlordDatabase = class landlordDatabase{
         }
     }
 
+    editTenant = async(tenantID, tenantInfo) => {
+        try{
+            const collection = this.database.collection(this.useCases.updateTenant)
+            const tenantObject = await collection.findOne({_id:ObjectId(tenantID)})
+            if(tenantObject == null){
+                console.log(`Tenant ID: ${tenantID} couldn't be found`)
+                return false
+            }
+            await collection.updateOne({_id:ObjectId(tenantID)},{$set: {...tenantInfo}},(err,result)=>{
+                if(err){
+                    console.log(err)
+                    return false
+                } else {
+                    console.log(`Tenant ${tenantID} updated`)
+                    return true
+                }
+            })
+        }
+        catch {
+            console.log(`Error Finding tenant ID ${tenantID}, Error: ${error}`)
+            return false
+        }
+
+    }
+
 
     async getTenantInfo(tenantID,res){
         const collection = this.database.collection(this.useCases.getTenant)
@@ -462,7 +487,6 @@ exports.landlordDatabase = class landlordDatabase{
         console.log(`Email sent to ${email}`);
     }
 
-    // TODO: reject Quotation
     // TODO: updateTenant Info (Contact Info, name, image)
-    // TODO: If no admin then landlord register themselves
+    // TODO: landlord register themselves
 }
