@@ -238,8 +238,8 @@ exports.tenantDatabase = class tenantDatabase{
     }
     async getAllServiceTickets(id,res){
         try{
-            const collection = await this.database.collection(this.useCases.getAllServiceTickets)
-            collection.find({tenantRef:ObjectId(id)}).toArray((err,data)=>{
+            const collection = this.database.collection(this.useCases.getAllServiceTickets)
+            await collection.find({tenantRef:ObjectId(id)}).project({images:0,quotationDocument:0}).toArray((err,data)=>{
                 if (err) {
                     console.error('Error finding documents:', err);
                     res.status(500).send(err);

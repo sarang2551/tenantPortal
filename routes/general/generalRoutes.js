@@ -9,7 +9,6 @@ module.exports = function(app,database){
     })
     app.get('/general/getServiceTicketInfo/:serviceTicketID',async(req,res)=>{
         const serviceTicketID = req.params.serviceTicketID;
-        console.log(`Received id: ${serviceTicketID}`)
         await database.getServiceTicketInfo(serviceTicketID,res);
     })
 }
