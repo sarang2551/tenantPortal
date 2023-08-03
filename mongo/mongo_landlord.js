@@ -105,6 +105,32 @@ exports.landlordDatabase = class landlordDatabase{
         }
     }
 
+    deleteUnit = async (unitID) => {
+        try {
+            console.log(unitID)
+            const unitCollection = this.database.collection(this.useCases.deleteUnit)
+            const unitInfo = await unitCollection.findOne({_id: ObjectId(unitID)})
+            if (!unitInfo) {
+                console.log(`Unable to find unit with ${unitID} for landlord`)
+                return false
+            }
+            await unitCollection.deleteOne({_id: ObjectId(unitID)}, (err, res) =>{
+                if (err) {
+                    console.log("Unable to delete Unit")
+                }
+                else {
+                    console.log(`Unit ${unitID} deleted`)
+                }
+            })
+            return true
+        }
+        catch(err){
+            console.log(`Error deleting unit with ID: ${unitID} Error : ${err}`)
+            return false
+        }
+
+    }
+
     // Send the info as shown below
     addTenants = async (tenantInfo) => {
         try {
@@ -151,6 +177,14 @@ exports.landlordDatabase = class landlordDatabase{
 
     deleteTenant = async (tenantID, res) => {
         try {
+            const unitCollection = this.database.collection(this.useCases.deleteUnit)
+            const unitInfo = await unitCollection.findOne({tenantRef: ObjectId(tenantID)})
+            if (!unitInfo) {
+                console.log(`Unable to find unit with ${tenantID} for landlord`)
+                res.json({status:500,message:"Unable to find unit"})
+            }
+            await unitCollection.deleteOne({_id: unitInfo._id})
+
             const tenantcollection = this.database.collection(this.useCases.getTenant)
             const tenantInfo = await tenantcollection.findOne({_id:ObjectId(tenantID)})
             if(!tenantInfo) {
@@ -185,12 +219,11 @@ exports.landlordDatabase = class landlordDatabase{
             await collection.updateOne({_id:ObjectId(tenantID)},{$set: {...tenantInfo}},(err,result)=>{
                 if(err){
                     console.log(err)
-                    return false
                 } else {
                     console.log(`Tenant ${tenantID} updated`)
-                    return true
                 }
             })
+            return true
         }
         catch {
             console.log(`Error Finding tenant ID ${tenantID}, Error: ${error}`)
@@ -219,7 +252,7 @@ exports.landlordDatabase = class landlordDatabase{
             const STobj = await pendingSTCursor.next();
             pendingST.push(STobj)
         }
-        res.send(pendingST)
+        res.json({status:200, pendingST})
     }        
 
     getBuildings = async (userID,res) => {

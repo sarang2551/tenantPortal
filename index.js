@@ -59,7 +59,8 @@ class Enviroment {
         showLeases: "units",
         addLeaseUnit: "leaseUnit",
         getBuildingInformation:"units",
-        submitFeedback:"serviceTickets"
+        submitFeedback:"serviceTickets",
+        deleteUnit: "units"
       }
   }
 };

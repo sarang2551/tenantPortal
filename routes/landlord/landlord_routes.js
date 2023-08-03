@@ -55,6 +55,16 @@ module.exports = function(app,database){
         }
     })
 
+    app.delete("/landlord/deleteUnit/:unitID", async(req, res) => {
+        const result = await database.deleteUnit(req.params.unitID)
+        if (result) {
+            res.json({status:200,message:"Successfully deleted Unit"})
+        }
+        else {
+            res.json({status:500,message:"Unable to find unit"})
+        }
+    })
+
     app.get('/landlord/getAllServiceTickets/:userID', async(req,res)=>{
         const userID = req.params.userID;
         await database.getPendingST(userID, res)
