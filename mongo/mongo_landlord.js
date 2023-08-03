@@ -210,10 +210,10 @@ exports.landlordDatabase = class landlordDatabase{
         res.json({status:200,tenantInfo})
     }
 
-    // No need to send any data
+    
     getPendingST = async (userID, res) => {
         const collection = this.database.collection(this.useCases.getPendingServiceTickets)
-        const pendingSTCursor = await collection.find({landlordRef: ObjectId(userID)})
+        const pendingSTCursor = await collection.find({landlordRef: ObjectId(userID)}).project({images:0,quotationDocument:0})
         var pendingST = []
         while (await pendingSTCursor.hasNext()) {
             const STobj = await pendingSTCursor.next();
