@@ -1,3 +1,5 @@
+const nodemailer = require('nodemailer')
+const bcrypt = require("bcrypt")
 const {Notif_UpdateServiceTicket} = require("../models/Notif_Models")
 const assert = require('assert')
 const { ObjectId } = require('mongodb')
@@ -103,13 +105,48 @@ exports.landlordDatabase = class landlordDatabase{
         }
     }
 
+    deleteUnit = async (unitID) => {
+        try {
+            console.log(unitID)
+            const unitCollection = this.database.collection(this.useCases.deleteUnit)
+            const unitInfo = await unitCollection.findOne({_id: ObjectId(unitID)})
+            if (!unitInfo) {
+                console.log(`Unable to find unit with ${unitID} for landlord`)
+                return false
+            }
+            await unitCollection.deleteOne({_id: ObjectId(unitID)}, (err, res) =>{
+                if (err) {
+                    console.log("Unable to delete Unit")
+                }
+                else {
+                    console.log(`Unit ${unitID} deleted`)
+                }
+            })
+            return true
+        }
+        catch(err){
+            console.log(`Error deleting unit with ID: ${unitID} Error : ${err}`)
+            return false
+        }
+
+    }
+
     // Send the info as shown below
     addTenants = async (tenantInfo) => {
         try {
             if(this.database){
-                const {unitRef,landlordRef} = tenantInfo
-                const document = {...tenantInfo,notifications:[],unitRef:ObjectId(unitRef),landlordRef:ObjectId(landlordRef)}
                 const tenantCollection = this.database.collection(this.useCases.registerTenant);
+                const {unitRef,landlordRef, email} = tenantInfo
+                while (true) {
+                    var plaintext_password = await this.generatePassword();
+                    var passwordExists = await tenantCollection.findOne({password:plaintext_password})
+                    if (!passwordExists) {
+                        break;
+                    }
+                }
+                var username = "test222" // TODO: Need to Change to be more dynamic
+                this.sendEmail(email, plaintext_password, username)
+                const document = {...tenantInfo,notifications:[],unitRef:ObjectId(unitRef),landlordRef:ObjectId(landlordRef), "password":plaintext_password, "username":username, "lastLoginDate":null}
                 const tenantObject = await tenantCollection.insertOne(document)
                 const tenantID = tenantObject.insertedId
                 const unitCollection = this.database.collection("units")
@@ -137,6 +174,65 @@ exports.landlordDatabase = class landlordDatabase{
             return false
         }
     }
+
+    deleteTenant = async (tenantID, res) => {
+        try {
+            const unitCollection = this.database.collection(this.useCases.deleteUnit)
+            const unitInfo = await unitCollection.findOne({tenantRef: ObjectId(tenantID)})
+            if (!unitInfo) {
+                console.log(`Unable to find unit with ${tenantID} for landlord`)
+                res.json({status:500,message:"Unable to find unit"})
+            }
+            await unitCollection.deleteOne({_id: unitInfo._id})
+
+            const tenantcollection = this.database.collection(this.useCases.getTenant)
+            const tenantInfo = await tenantcollection.findOne({_id:ObjectId(tenantID)})
+            if(!tenantInfo) {
+                console.log(`Unable to find tenant ${tenantID} for landlord`)
+                res.json({status:500,message:"Unable to find tenant"})
+            }
+            await tenantcollection.deleteOne({_id:ObjectId(tenantID)},(err,result)=>{
+                if(err){
+                    console.log(`Unable to delete delete with ID: ${tenantID}`)
+                    return false
+                } else {
+                    console.log(`Deleted tenant ${tenantID}`)
+                    return true
+                }
+            })
+
+            res.json({status:200,message:`tenant with ID: ${tenantID} deleted`})
+        } catch(err){
+            console.log(`Error deleting tenant with ID: ${tenantID} Error : ${err}`)
+            return false
+        }
+    }
+
+    editTenant = async(tenantID, tenantInfo) => {
+        try{
+            const collection = this.database.collection(this.useCases.updateTenant)
+            const tenantObject = await collection.findOne({_id:ObjectId(tenantID)})
+            if(tenantObject == null){
+                console.log(`Tenant ID: ${tenantID} couldn't be found`)
+                return false
+            }
+            await collection.updateOne({_id:ObjectId(tenantID)},{$set: {...tenantInfo}},(err,result)=>{
+                if(err){
+                    console.log(err)
+                } else {
+                    console.log(`Tenant ${tenantID} updated`)
+                }
+            })
+            return true
+        }
+        catch {
+            console.log(`Error Finding tenant ID ${tenantID}, Error: ${error}`)
+            return false
+        }
+
+    }
+
+
     async getTenantInfo(tenantID,res){
         const collection = this.database.collection(this.useCases.getTenant)
         const tenantInfo = await collection.findOne({_id:ObjectId(tenantID)})
@@ -156,7 +252,7 @@ exports.landlordDatabase = class landlordDatabase{
             const STobj = await pendingSTCursor.next();
             pendingST.push(STobj)
         }
-        res.send(pendingST)
+        res.json({status:200, pendingST})
     }        
 
     getBuildings = async (userID,res) => {
@@ -387,11 +483,43 @@ exports.landlordDatabase = class landlordDatabase{
         return `${day}:${month}:${year}`
     }
 
-    // TODO: reject Quotation
-    // TODO: sendNego
-    // TODO: deleteTenants
-    // TODO: updateTenant Info
-    // TODO: In registerTenant and Landlord create a random password then call the hash function then add into the database
-    // TODO: When we registerTenants, then we take the number and email and sent to their email
-    // TODO: If no admin then landlord register themselves
+    generatePassword = async() => {
+        var length = 12,
+            charset = "@#$&*0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$&*0123456789abcdefghijklmnopqrstuvwxyz",
+            password = "";
+        for (var i = 0, n = charset.length; i < length; ++i) {
+            password += charset.charAt(Math.floor(Math.random() * n));
+        }
+        return password;
+    }
+
+    sendEmail = async(email, password, username) => {
+        var transporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true, // SSL
+            auth: {
+              user: 'dylantohdylantoh@gmail.com',
+              pass: 'nrclmwinedytorbl'
+            }
+        });
+          
+        const info = await transporter.sendMail({
+            from: 'dylantohdylantoh@gmail.com',
+            to: email,
+            subject: 'Tenant Account Created',
+            html: `
+            <h1>Your Tenant Account has been created successfully</h1>
+            <p>Click <a href="http://localhost:3000/">here</a> to log into your account and change your password</p>
+            <p>Username: ${username}</p>
+            <p>Password: ${password}</p>
+            `
+            
+        });
+
+        console.log(`Email sent to ${email}`);
+    }
+
+    // TODO: updateTenant Info (Contact Info, name, image)
+    // TODO: landlord register themselves
 }

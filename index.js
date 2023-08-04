@@ -50,6 +50,7 @@ class Enviroment {
         updateServiceTicketProgress:"serviceTickets",
         registerTenant: "tenants",
         getTenant:"tenants",
+        updateTenant: "tenants",
         getAllNotifications:"landlords",
         getPendingServiceTickets: "serviceTickets",
         getBuildingsOwned: "buildings",
@@ -58,7 +59,8 @@ class Enviroment {
         showLeases: "units",
         addLeaseUnit: "leaseUnit",
         getBuildingInformation:"units",
-        submitFeedback:"serviceTickets"
+        submitFeedback:"serviceTickets",
+        deleteUnit: "units"
       }
   }
 };

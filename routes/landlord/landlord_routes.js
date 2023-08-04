@@ -5,7 +5,6 @@ module.exports = function(app,database){
         }catch(err){
             res.status(500).json({message:"Error loging in landlord"})
         }
-        
     })
     app.post('/landlord/registerLandlord',async(req,res)=>{
         try{
@@ -36,6 +35,16 @@ module.exports = function(app,database){
         }
     })
 
+    app.put('/landlord/editTenant/:userID', async(req,res)=>{
+        const result = await database.editTenant(req.params.userID, req.body)
+        if(result){
+            // send ok status
+            res.json({status:200,message:"Edited Tenant Successfully"})
+        } else {
+            res.json({status:500,message:"Unsuccessful editing of Tenant"})
+        }
+    })
+
     app.post('/landlord/addUnit', async(req,res)=>{
         const result = await database.addUnit(req.body)
         if(result){
@@ -43,6 +52,16 @@ module.exports = function(app,database){
             res.json({status:200,message:"Successfully added Unit"})
         } else {
             res.json({status:500,message:"Error adding Unit"})
+        }
+    })
+
+    app.delete("/landlord/deleteUnit/:unitID", async(req, res) => {
+        const result = await database.deleteUnit(req.params.unitID)
+        if (result) {
+            res.json({status:200,message:"Successfully deleted Unit"})
+        }
+        else {
+            res.json({status:500,message:"Unable to find unit"})
         }
     })
 
@@ -64,6 +83,11 @@ module.exports = function(app,database){
     app.get('/landlord/getTenantInfo/:tenantID',async(req,res)=>{
         const tenantID = req.params.tenantID;
         await database.getTenantInfo(tenantID,res)
+    })
+
+    app.delete('/landlord/deleteTenant/:tenantID', async(req,res) => {
+        const tenantID = req.params.tenantID;
+        await database.deleteTenant(tenantID,res)
     })
 
     app.post('/landlord/addBuilding',async(req,res)=>{
@@ -104,7 +128,6 @@ module.exports = function(app,database){
         const result = await database.getAvailableLease()
         res.send(`${JSON.stringify(result)}`);
     })
-
 
 
 }
