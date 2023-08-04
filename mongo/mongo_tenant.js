@@ -20,7 +20,6 @@ exports.tenantDatabase = class tenantDatabase{
             // find the user using the username (username is email and should also be the ID)
             const collection = this.database.collection(this.useCases.login)
             const userObject = await collection.findOne({username})
-            console.log(userObject)
             if(userObject === null){
                 console.log("User not found")
                 res.status(500).json({message:"User not found"})
@@ -112,7 +111,7 @@ exports.tenantDatabase = class tenantDatabase{
                 }
                 const landlordID = tenant_object.landlordID
                 const unitID = tenant_object.unitID
-                const landlord_object = await this.database.collection("landlords").findOne({_id:ObjectId(ObjectId(landlordID))})
+                const landlord_object = await this.database.collection("landlords").findOne({_id:ObjectId(landlordID)})
                 if(landlord_object == null){
                     console.log(`No landlord with id: ${landlordID}`)
                     return false
@@ -267,7 +266,7 @@ exports.tenantDatabase = class tenantDatabase{
                     console.error('Error finding documents:', err);
                     res.status(500).send(err);
                   }
-                res.send(data)
+                res.send(data.reverse())
             })
             
         }catch(error){
@@ -321,7 +320,7 @@ exports.tenantDatabase = class tenantDatabase{
                 res.status(500).json(error)
             }
             const {notifications} = tenantObject
-            res.status(200).send(notifications)
+            res.status(200).json({notifications})
         }catch(error){
             console.log(`Error getting all notifications for tenant: ${id} Error: ${error}`)
             res.status(500).json(error)
@@ -357,14 +356,14 @@ exports.tenantDatabase = class tenantDatabase{
                 res.json({status:500,message:"Tenant doesn't exist"})
             }
             const {landlordID, unitID} = tenant_object
-            const landlordObject = await this.database.collection("landlords").findOne({_id:landlordID})
+            const landlordObject = await this.database.collection("landlords").findOne({_id:ObjectId(landlordID)})
             const {landlordName} = landlordObject
             if(!landlordName){
                 console.log(`Couldn't find landlord name`)
                 res.json({status:500,message:"Couldn't find landlord name"})
                 return
             }
-            const UnitObject = await this.database.collection("units").findOne({_id:unitID})
+            const UnitObject = await this.database.collection("units").findOne({_id:ObjectId(unitID)})
             
             const {unitName} = UnitObject
             if(!unitName){
@@ -375,7 +374,7 @@ exports.tenantDatabase = class tenantDatabase{
             console.log(`Sending unit & landlord information`)
             res.json({status:200,tenantObject:{landlordName,unitName}})
         }catch(error){
-            console.log(`Error getting unit and landlord data for user: ${userID}`)
+            console.log(`Error getting unit and landlord data for user: ${userID}: ${error}`)
             res.json({status:500,message:error})
         }
     }
@@ -432,7 +431,6 @@ exports.tenantDatabase = class tenantDatabase{
 
     // Just need to send serviceTicketID and quotationAcceptedbyTenant
     updateQuotation = async (updateST) => {
-        console.log(updateST)
         try{
             const {userID,serviceTicketID,quotationAcceptance} = updateST
             const collection = this.database.collection(this.useCases.updateServiceTicketProgress)

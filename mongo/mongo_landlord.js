@@ -136,17 +136,17 @@ exports.landlordDatabase = class landlordDatabase{
         try {
             if(this.database){
                 const tenantCollection = this.database.collection(this.useCases.registerTenant);
-                const {unitRef,landlordRef, email} = tenantInfo
-                while (true) {
+                const {unitRef,landlordRef, email, tenantName } = tenantInfo
+                while (true) { // run loop to generate a completely random password that doesn't already exist in the database
                     var plaintext_password = await this.generatePassword();
                     var passwordExists = await tenantCollection.findOne({password:plaintext_password})
                     if (!passwordExists) {
                         break;
                     }
                 }
-                var username = "test222" // TODO: Need to Change to be more dynamic
+                var username = tenantName // TODO: Need to Change to be more dynamic
                 this.sendEmail(email, plaintext_password, username)
-                const document = {...tenantInfo,notifications:[],unitRef:ObjectId(unitRef),landlordRef:ObjectId(landlordRef), "password":plaintext_password, "username":username, "lastLoginDate":null}
+                const document = {...tenantInfo,notifications:[],unitID:ObjectId(unitRef),landlordID:ObjectId(landlordRef), "password":plaintext_password, username, "lastLoginDate":null}
                 const tenantObject = await tenantCollection.insertOne(document)
                 const tenantID = tenantObject.insertedId
                 const unitCollection = this.database.collection("units")
@@ -252,7 +252,7 @@ exports.landlordDatabase = class landlordDatabase{
             const STobj = await pendingSTCursor.next();
             pendingST.push(STobj)
         }
-        res.json({status:200, pendingST})
+        res.send(pendingST.reverse())
     }        
 
     getBuildings = async (userID,res) => {
@@ -472,6 +472,60 @@ exports.landlordDatabase = class landlordDatabase{
             return true
         }catch(err){
             console.log(`Error sending feedback for landlord: ${err}`)
+        }
+    }
+    async getSTForPieChart(userID,res){
+        try{
+            const collection =  this.database.collection(this.useCases.getAllServiceTickets)
+            await collection.aggregate([
+                {
+                    $match: {
+                      landlordRef: ObjectId(userID)
+                    }
+                  },
+                {
+                  $group: {
+                    _id: "$progressStage",
+                    count: { $sum: 1 }
+                  }
+                },
+                {
+                  $project: {
+                    progressStage: "$_id",
+                    count: 1,
+                    _id: 0
+                  }
+                }
+              ]).toArray(function (err, result) {
+                if (err) {
+                    console.log(`Error sending pie chart data: ${err}`)
+                    res.json({status:500,message:"Error getting pieChart data"})
+                } else {
+                    res.status(200).send(result)
+                }
+              });;
+            // [{ progressStage: 0, count: 1 },{ progressStage: 2, count: 1 }]
+            
+        }catch(err){
+            console.log(`Error sending pie chart data: ${err}`)
+            res.json({status:500,message:"Error getting pieChart data"})
+        }
+    }
+    
+    async getTenantList(userID,res){
+        try{
+            const collection = this.database.collection(this.useCases.getTenant)
+            await collection.find({landlordRef:ObjectId(userID)}).project({notifications:0,images:0}).toArray((err,result)=>{
+                if (err) {
+                    console.log(`Error getting tenants list: ${err}`)
+                    res.json({status:500,message:"Error getting tenants list:"})
+                } else {
+                    res.send(result)
+                }
+            })
+        }catch(err){
+            console.log(`Error getting tenants list for landlord: ${userID}: ${err}`)
+            res.json({status:500,message:"Error getting tenants list"})
         }
     }
     

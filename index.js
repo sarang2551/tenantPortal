@@ -1,8 +1,7 @@
 const dotenv  = require('dotenv')
 const baseDatabase = require('./mongo/baseDatabase').baseDatabase
-const {json, urlencoded, rest,notFound, errorHandler } = require("@feathersjs/express")
 const express = require("@feathersjs/express")
-const {feathers} = require("@feathersjs/feathers")
+const mongoSanitize = require('mongo-sanitize');
 
 class Enviroment {
   dotenvPath;
@@ -49,6 +48,7 @@ class Enviroment {
         login: "landlords",
         registerLandlord:"landlords",
         updateServiceTicketProgress:"serviceTickets",
+        getAllServiceTickets:"serviceTickets",
         registerTenant: "tenants",
         getTenant:"tenants",
         updateTenant: "tenants",
@@ -61,12 +61,22 @@ class Enviroment {
         addLeaseUnit: "leaseUnit",
         getBuildingInformation:"units",
         submitFeedback:"serviceTickets",
-        deleteUnit: "units"
+        deleteUnit: "units",
       }
   }
 };
 
 const app = express()
+
+// Middleware to sanitize user inputs
+app.use((req, res, next) => {
+    // Sanitize all user inputs in the request body, params, and query
+    req.body = mongoSanitize(req.body);
+    req.params = mongoSanitize(req.params);
+    req.query = mongoSanitize(req.query);
+    next();
+  });
+  
 async function init(){
 
 
