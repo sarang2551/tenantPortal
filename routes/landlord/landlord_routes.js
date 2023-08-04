@@ -4,11 +4,6 @@ module.exports = function(app,database){
             await database.verifyLogin(res.body,res)
             res.status(200).json({message:"Successfully logged in"})
         }catch(err){
-<<<<<<< HEAD
-            res.status(500).json({message:"Error logging in landlord"})
-        }   
-        
-=======
             res.status(500).json({message:"Error loging in landlord"})
         }
     })
@@ -24,7 +19,6 @@ module.exports = function(app,database){
             console.log(`Error registering landlord: ${err}`)
             res.status(500).json({message:"Error registering landlord"})
         }
->>>>>>> c921079644e91cf8677dfc016b108defc3b5452e
     })
 
     app.get('/landlord/getNotifications/:userID', async(req,res) => {

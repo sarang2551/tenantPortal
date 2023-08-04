@@ -88,7 +88,6 @@ module.exports = function(app,database){
         } else {
             res.json({status:500,message:"Unsuccessful Acceptance of Quotation"})
         }
-<<<<<<< HEAD
     })    
 
     app.put('/tenant/hashPasswords', async(req,res)=>{
@@ -100,8 +99,4 @@ module.exports = function(app,database){
             res.send('Error hashing password')
         }
     })
-=======
-    })   
-    
->>>>>>> c921079644e91cf8677dfc016b108defc3b5452e
 }
