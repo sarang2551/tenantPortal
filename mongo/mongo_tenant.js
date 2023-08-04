@@ -556,4 +556,40 @@ exports.tenantDatabase = class tenantDatabase{
         }
     }
 
+      async hashPasswords(user_name) {
+        try{
+        const collection = this.database.collection(this.useCases.login);
+        const userObject = await collection.findOne({username:user_name});
+        //var username = use "RC_0002" to test
+        var password =userObject["password"] //use "test123" to test
+        if (userObject== null){
+            console.log(`cant find username ${userObject['username']}`)
+        } else{
+            console.log('user found')
+        }
+        const saltRounds  = 5                            //higher the number,more difficult to crack
+        bcrypt.genSalt(saltRounds,function (saltError,salt) {
+            if(saltError){ //if salting has issues
+                console.log("Error salting password")
+                throw(saltError)
+            } else {
+                bcrypt.hash(password,salt,async function(hashError, hash){
+                    if (hashError){                        // if hashing with declared salt has issues
+                        console.log("Error hashing string")
+                        throw(hashError)
+                    } else {                               //hash and save it to database of user
+                        userObject["password"]=hash
+                        collection.updateOne({username:userObject['username']},{$set:{password:hash}})
+                        console.log("hash success")
+                    }
+                })
+            }
+        })
+        return true
+    }catch(error){
+        console.log(`Error hashing password of ${user_name}`)
+        return false
+    }
+}
+
 }

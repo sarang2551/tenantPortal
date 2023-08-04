@@ -1,5 +1,7 @@
+//THIS FILE IS FOR TESTING PURPOSES 
+//node indextest.js then go post man and post the tester routes
 const dotenv  = require('dotenv')
-const baseDatabase = require('./mongo/baseDatabase').baseDatabase
+const baseDatabase = require('../mongo/baseDatabase').baseDatabase
 const {json, urlencoded, rest,notFound, errorHandler } = require("@feathersjs/express")
 const express = require("@feathersjs/express")
 const {feathers} = require("@feathersjs/feathers")
@@ -33,25 +35,20 @@ class Enviroment {
   getTenantUseCases = () => {
       return {
         login:"tenants",
-        changePassword: "tenants",
         addServiceTicket:"serviceTickets",
-        deleteServiceTicket:"serviceTickets",
+        deleteServiceTickets:"serviceTickets",
+        registerUnit:"units",
         updateServiceTicketProgress:"serviceTickets",
-        getAllNotifications:"tenants",
-        getAllServiceTickets:"serviceTickets",
-        getUnitData:"units",
-        getUnitAndLandlordData:"tenants",
-        submitFeedback:"serviceTickets"
+        registerLandlord:"landlords",
+        getAllNotifications:"landlords"
       }
   }
   getLandlordUseCases = () => {
       return {
-        login: "landlords",
-        registerLandlord:"landlords",
+        login:"landlords",
         updateServiceTicketProgress:"serviceTickets",
         registerTenant: "tenants",
         getTenant:"tenants",
-        updateTenant: "tenants",
         getAllNotifications:"landlords",
         getPendingServiceTickets: "serviceTickets",
         getBuildingsOwned: "buildings",
@@ -59,9 +56,7 @@ class Enviroment {
         addUnit: "units",
         showLeases: "units",
         addLeaseUnit: "leaseUnit",
-        getBuildingInformation:"units",
-        submitFeedback:"serviceTickets",
-        deleteUnit: "units"
+        getBuildingInformation:"units"
       }
   }
 };
@@ -86,7 +81,7 @@ const server = await app.listen(8000,()=>{
     console.log("Server started")
 })
 
-require('./routes')(app,databaseClass)
+require('../routestest')(app,databaseClass)
 }
 init()
 module.exports = app
