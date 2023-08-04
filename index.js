@@ -1,7 +1,7 @@
 const dotenv  = require('dotenv')
 const baseDatabase = require('./mongo/baseDatabase').baseDatabase
 const express = require("@feathersjs/express")
-
+const mongoSanitize = require('mongo-sanitize');
 
 class Enviroment {
   dotenvPath;
@@ -66,6 +66,16 @@ class Enviroment {
 };
 
 const app = express()
+
+// Middleware to sanitize user inputs
+app.use((req, res, next) => {
+    // Sanitize all user inputs in the request body, params, and query
+    req.body = mongoSanitize(req.body);
+    req.params = mongoSanitize(req.params);
+    req.query = mongoSanitize(req.query);
+    next();
+  });
+  
 async function init(){
 
 

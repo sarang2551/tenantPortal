@@ -136,17 +136,17 @@ exports.landlordDatabase = class landlordDatabase{
         try {
             if(this.database){
                 const tenantCollection = this.database.collection(this.useCases.registerTenant);
-                const {unitRef,landlordRef, email} = tenantInfo
-                while (true) {
+                const {unitRef,landlordRef, email, tenantName } = tenantInfo
+                while (true) { // run loop to generate a completely random password that doesn't already exist in the database
                     var plaintext_password = await this.generatePassword();
                     var passwordExists = await tenantCollection.findOne({password:plaintext_password})
                     if (!passwordExists) {
                         break;
                     }
                 }
-                var username = "test222" // TODO: Need to Change to be more dynamic
+                var username = tenantName // TODO: Need to Change to be more dynamic
                 this.sendEmail(email, plaintext_password, username)
-                const document = {...tenantInfo,notifications:[],unitRef:ObjectId(unitRef),landlordRef:ObjectId(landlordRef), "password":plaintext_password, "username":username, "lastLoginDate":null}
+                const document = {...tenantInfo,notifications:[],unitID:ObjectId(unitRef),landlordID:ObjectId(landlordRef), "password":plaintext_password, username, "lastLoginDate":null}
                 const tenantObject = await tenantCollection.insertOne(document)
                 const tenantID = tenantObject.insertedId
                 const unitCollection = this.database.collection("units")
