@@ -252,7 +252,7 @@ exports.landlordDatabase = class landlordDatabase{
             const STobj = await pendingSTCursor.next();
             pendingST.push(STobj)
         }
-        res.json({status:200, pendingST})
+        res.send(pendingST.reverse())
     }        
 
     getBuildings = async (userID,res) => {
@@ -472,6 +472,60 @@ exports.landlordDatabase = class landlordDatabase{
             return true
         }catch(err){
             console.log(`Error sending feedback for landlord: ${err}`)
+        }
+    }
+    async getSTForPieChart(userID,res){
+        try{
+            const collection =  this.database.collection(this.useCases.getAllServiceTickets)
+            await collection.aggregate([
+                {
+                    $match: {
+                      landlordRef: ObjectId(userID)
+                    }
+                  },
+                {
+                  $group: {
+                    _id: "$progressStage",
+                    count: { $sum: 1 }
+                  }
+                },
+                {
+                  $project: {
+                    progressStage: "$_id",
+                    count: 1,
+                    _id: 0
+                  }
+                }
+              ]).toArray(function (err, result) {
+                if (err) {
+                    console.log(`Error sending pie chart data: ${err}`)
+                    res.json({status:500,message:"Error getting pieChart data"})
+                } else {
+                    res.status(200).send(result)
+                }
+              });;
+            // [{ progressStage: 0, count: 1 },{ progressStage: 2, count: 1 }]
+            
+        }catch(err){
+            console.log(`Error sending pie chart data: ${err}`)
+            res.json({status:500,message:"Error getting pieChart data"})
+        }
+    }
+    
+    async getTenantList(userID,res){
+        try{
+            const collection = this.database.collection(this.useCases.getTenant)
+            await collection.find({landlordRef:ObjectId(userID)}).project({notifications:0,images:0}).toArray((err,result)=>{
+                if (err) {
+                    console.log(`Error getting tenants list: ${err}`)
+                    res.json({status:500,message:"Error getting tenants list:"})
+                } else {
+                    res.send(result)
+                }
+            })
+        }catch(err){
+            console.log(`Error getting tenants list for landlord: ${userID}: ${err}`)
+            res.json({status:500,message:"Error getting tenants list"})
         }
     }
     

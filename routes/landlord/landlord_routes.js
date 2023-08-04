@@ -1,8 +1,7 @@
 module.exports = function(app,database){
     app.post('/landlord/verifyLogin', async(req,res)=>{
         try{
-            await database.verifyLogin(res.body,res)
-            res.status(200).json({message:"Successfully logged in"})
+            await database.verifyLogin(req.body,res)
         }catch(err){
             res.status(500).json({message:"Error loging in landlord"})
         }
@@ -74,6 +73,16 @@ module.exports = function(app,database){
     app.get('/landlord/buildingsOwned/:userID', async(req,res) => {
         const userID = req.params.userID;
         await database.getBuildings(userID,res)
+    })
+
+    app.get('/landlord/getPieChartData/:userID',async(req,res)=>{
+        const userID = req.params.userID
+        await database.getSTForPieChart(userID,res)
+    })
+
+    app.get("/landlord/getTenantList/:userID",async(req,res)=>{
+        const userID = req.params.userID
+        await database.getTenantList(userID,res)
     })
 
     app.get('/landlord/getBuildingInformation/:buildingID',async(req,res)=>{

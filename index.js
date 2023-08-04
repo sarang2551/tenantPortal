@@ -1,6 +1,5 @@
 const dotenv  = require('dotenv')
 const baseDatabase = require('./mongo/baseDatabase').baseDatabase
-const {json, urlencoded, rest,notFound, errorHandler } = require("@feathersjs/express")
 const express = require("@feathersjs/express")
 const mongoSanitize = require('mongo-sanitize');
 
@@ -49,6 +48,7 @@ class Enviroment {
         login: "landlords",
         registerLandlord:"landlords",
         updateServiceTicketProgress:"serviceTickets",
+        getAllServiceTickets:"serviceTickets",
         registerTenant: "tenants",
         getTenant:"tenants",
         updateTenant: "tenants",
@@ -61,7 +61,7 @@ class Enviroment {
         addLeaseUnit: "leaseUnit",
         getBuildingInformation:"units",
         submitFeedback:"serviceTickets",
-        deleteUnit: "units"
+        deleteUnit: "units",
       }
   }
 };
