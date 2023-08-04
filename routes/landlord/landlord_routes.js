@@ -130,17 +130,5 @@ module.exports = function(app,database){
         res.send(`${JSON.stringify(result)}`);
     })
 
-<<<<<<< HEAD
-    app.put('/landlord/hashPasswords', async(req,res)=>{
-        const result = await database.hashPasswords(req.body.user_name)
-        if(result){
-            res.send('Hashing successful')
-        }
-        else{
-            res.send('Error hashing password')
-        }
-    })
-=======
->>>>>>> c921079644e91cf8677dfc016b108defc3b5452e
 
 }

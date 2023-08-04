@@ -20,8 +20,5 @@
   },
   "devDependencies": {
     "chai-http": "^4.4.0"
-  },
-  "scripts": {
-    "test": "npm test"
   }
 }
