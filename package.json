@@ -1,6 +1,9 @@
 {
   "name": "ecs_project",
   "version": "1.0.0",
+  "scripts": {
+    "test": "mocha --exit"
+  },
   "description": "My Node.js application",
   "dependencies": {
     "@feathersjs/express": "^5.0.5",
@@ -18,8 +21,5 @@
   },
   "devDependencies": {
     "chai-http": "^4.4.0"
-  },
-  "scripts": {
-    "test": "npm test"
   }
 }
