@@ -7,6 +7,16 @@ module.exports = function(app,database){
         }
         
     })
+
+    app.put('/tenant/changePassword', async(req, res) => {
+        try{
+            await database.changePassword(req.body)
+            res.status(200).json({message:"Password Changed Successfully"})
+        }catch(err){
+            res.status(500).json({message:"Error Changing Password"})
+        }
+    })
+
     app.post('/tenant/addServiceTicket',async(req,res)=>{
         const result = await database.addServiceTicket(req.body)
         if(result){
@@ -18,9 +28,7 @@ module.exports = function(app,database){
     })
 
     app.put('/tenant/updateServiceTicketProgress',async(req,res)=>{
-        const result = await database.updateServiceTicketProgress(req.body._id)
-        if(result) res.json({status:200,message:"Updated Successfully"})
-        else res.json({status:401,message:"Updating unsuccessful"})
+        await database.updateServiceTicketProgress(req.body._id,res)
     })
     
     app.get('/tenant/getUnitData/:userID',async(req,res)=>{
@@ -36,8 +44,18 @@ module.exports = function(app,database){
         const userID = req.params.userID
         await database.getSTForPieChart(userID,res)
     })
-    
-
+    app.get('/tenant/getNotifications/:userID',async(req,res)=>{
+        const userID = req.params.userID
+        await database.getAllNotifications(userID,res)
+    })
+    app.put('/tenant/changePassword',async(req,res)=>{
+        const result = database.changePassword(req.body)
+        if(result){
+            res.status(200).json({message:"Changed password successfully"})
+        } else {
+            res.status(500).json({message:"Unsuccessfull password change"})
+        }
+    })
     app.delete('/tenant/deleteServiceTicket',async(req,res)=>{
         try{
             const result = await database.deleteServiceTicket(req.body._id)
@@ -52,24 +70,25 @@ module.exports = function(app,database){
         await database.getUnitAndLandlordData(userID,res)
     })
 
-    app.put('/tenant/updateFeedback', async(req,res) => {
-        const result = await database.updateFeedback(req.body)
+    app.put('/tenant/submitFeedback', async(req,res) => {
+        const result = database.submitFeedback(req.body)
         if(result){
             // send ok status
-            res.json({status:200,message:"Feedback updated!"})
+            res.status(200).json({message:"Feedback updated!"})
         } else {
-            res.json({status:500,message:"Unsuccessful updating of Feedback"})
+            res.status(500).json({message:"Unsuccessful updating of Feedback"})
         }
     })
 
-    app.put('/tenant/acceptQuotation', async(req,res) => {
-        const result = await database.acceptQuotation(req.body)
+    app.put('/tenant/updateQuotation', async(req,res) => {
+        const result = await database.updateQuotation(req.body)
         if(result){
             // send ok status
             res.json({status:200,message:"Quotation Accepted"})
         } else {
-            res.json({status:500,message:"Unsuccessful Acceptance of Feedback"})
+            res.json({status:500,message:"Unsuccessful Acceptance of Quotation"})
         }
+<<<<<<< HEAD
     })    
 
     app.put('/tenant/hashPasswords', async(req,res)=>{
@@ -81,4 +100,8 @@ module.exports = function(app,database){
             res.send('Error hashing password')
         }
     })
+=======
+    })   
+    
+>>>>>>> c921079644e91cf8677dfc016b108defc3b5452e
 }
