@@ -31,8 +31,6 @@ module.exports = function(app,database){
       })
     //landlord notification testcases--------------------------------------------------------------------------------------------
 //even with undefined landlordID the function still returns landlord 1 for some reason
-// if there is no notifications for landlordID the function will send error instead
-//this has issues
     app.get('/landlord/getlandlordNotiTESTPASS', async(req,res) => {
         let data ={
             landlordID:"64873c12bd2e5989a5e90e1c"
@@ -171,6 +169,7 @@ module.exports = function(app,database){
             address:"testestest",
             postalCode:"123456"
         }
+        console.log("Test should pass and add specified building into building collection")
         try{
             const result = await database.addBuilding(data)
             if(result){
@@ -188,6 +187,7 @@ module.exports = function(app,database){
             address:"testestest",
             postalCode:"123456"
         }
+        console.log("Test should fail and return error with status 500")
         try{
             const result = await database.addBuilding(data)
             if(result){
@@ -198,6 +198,8 @@ module.exports = function(app,database){
         }
     })
 
+    //landlord update progress on service tickets test cases-------------------------------------------------------------------------------
+    //TODO
     app.put('/landlord/updateProgress', async(req,res)=>{
         const result = await database.updateProgress(req.body.serviceTicketID)
         if(result){
@@ -208,6 +210,8 @@ module.exports = function(app,database){
         }
     })
 
+    //landlord update quotation on service tickets test cases-------------------------------------------------------------------------------
+    //TODO
     app.put('/landlord/updateQuotation', async(req,res) => {
         const result = await database.updateQuotation(req.body)
         if(result){
@@ -218,19 +222,20 @@ module.exports = function(app,database){
         }
     })
 
+    //just need to test the router of this function
     app.get('/landlord/availableLease', async(req,res)=>{
         const result = await database.getAvailableLease()
         res.send(`${JSON.stringify(result)}`);
     })
 
-    // app.put('/landlord/hashPasswords', async(req,res)=>{
-    //     const result = await database.hashPasswords(req.body.user_name)
-    //     if(result){
-    //         res.send('Hashing successful')
-    //     }
-    //     else{
-    //         res.send('Error hashing password')
-    //     }
-    // })
+    app.put('/landlord/hashPasswords', async(req,res)=>{
+        const result = await database.hashPasswords(req.body.user_name)
+        if(result){
+            res.send('Hashing successful')
+        }
+        else{
+            res.send('Error hashing password')
+        }
+    })
 
 }
