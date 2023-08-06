@@ -104,4 +104,9 @@ module.exports = function(app,database){
         const updatingDocument = req.body
         await database.updateUserInfo(updatingDocument,res)
     })
+
+    app.get('/tenant/getRent&Quotation/:userID',async(req,res)=>{
+        const userID = req.params.userID;
+        await database.getRentAndQuotationData(userID,res)
+    })
 }

@@ -467,7 +467,6 @@ exports.landlordDatabase = class landlordDatabase{
     // Send serviceTicketID, quotationRequired, quotationAmount, quotationAttachmentPath, quotationUploadedBy, completedBy
     updateQuotation = async(serviceTicketUpdate) => {
         try{
-            console.log(serviceTicketUpdate)
             var {serviceTicketID} = serviceTicketUpdate
             const collection = this.database.collection(this.useCases.updateServiceTicketProgress)
             // find the serviceTicket and check whether both landlord and tenant have confirmed progress
@@ -678,6 +677,7 @@ exports.landlordDatabase = class landlordDatabase{
             res.status(500).json({message:"Error updating user information"})
         }
     }
+
 
     getTodaysDate(){
         const today = new Date();

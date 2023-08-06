@@ -510,6 +510,53 @@ exports.tenantDatabase = class tenantDatabase{
         }
     }
 
+    async getRentAndQuotationData(userID,res){
+        try{
+            const UnitCollection = this.database.collection("units")
+            const ServiceTicketCollection = this.database.collection("serviceTickets")
+            // get the sum of all quotationAmount attributes from all the tickets that the landlord has
+            const unitPipeline = [
+                {
+                  $match: {
+                    tenantRef: ObjectId(userID)
+                  }
+                },
+                {
+                  $group: {
+                    _id: null,
+                    totalSum: { $sum: "$monthlyRental" },
+                  },
+                },
+              ];
+              
+            const unitResult = await UnitCollection.aggregate(unitPipeline).toArray();
+            const TotalRent = unitResult[0].totalSum
+            
+            const ticketPipeline = [
+                {
+                  $match: {
+                    tenantRef: ObjectId(userID)
+                  }
+                },
+                {
+                  $group: {
+                    _id: null,
+                    totalSum: { $sum: "$quotationAmount" },
+                  },
+                },
+              ];
+
+            const ticketResult = await ServiceTicketCollection.aggregate(ticketPipeline).toArray();
+            const TotalQuotation = ticketResult[0].totalSum 
+            
+            res.status(200).json({TotalRent,TotalQuotation})
+
+        }catch(err){
+            console.log(`Error getting error and quotation data: ${err}`)
+            res.status(500).json({message:"`Error getting error and quotation data"})
+        }
+    }
+
     getTodaysDate(){
         const today = new Date();
         const day = String(today.getDate()).padStart(2, '0');

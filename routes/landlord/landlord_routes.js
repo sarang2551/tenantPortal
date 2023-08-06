@@ -158,5 +158,4 @@ module.exports = function(app,database){
         await database.updateUserInfo(userObject,res)
     })
 
-
 }
