@@ -14,19 +14,85 @@ exports.landlordDatabase = class landlordDatabase{
     }
 
     // Only need the username and password
-    verifyLogin = async (userinfo,res) => {
-        var username = userinfo["username"]
-        var password = userinfo["password"]
-        // find the user using the username
-        const collection = this.database.collection(this.useCases.login)
-        const userObject = await collection.findOne({username})
-        if(userObject["password"] == password){
-            // authentication successfull
-            console.log("Successful Login")
-            res.status(200).json({userID:userObject._id})
-        } else {
-            console.log("Incorrect Password")
-            res.status(500).json({message:"Incorrect Password"})
+    verifyLogin = async(userInfo,res) => {
+        try{
+            this.assertObjectHasProperties(userInfo,{"username":"string","password":"string"})
+            
+            var {username, password} = userInfo
+            // find the user using the username (username is email and should also be the ID)
+            const collection = this.database.collection(this.useCases.login)
+            const userObject = await collection.findOne({username})
+            if(userObject === null){
+                console.log("User not found")
+                res.status(500).json({message:"User not found"})
+            }
+            else if (userObject.lastLoginDate == null && userObject["password"] == password) {
+                console.log("Login Successful")
+                var firstLogin = true // if first login then redirect to change password page
+                res.status(200).json({userID:userObject._id, firstLogin})
+            }
+            else {
+                firstLogin = false
+                const lastLoginDate = this.getTodaysDate();
+                await collection.updateOne({_id:userObject._id},{$set:{lastLoginDate}},(err,result)=>{
+                    if(err){
+                        console.log(`Error updating last login date ${err}`)
+                        res.status(500).json({message:"Error updating last login date"})
+                    } 
+                })
+                bcrypt.compare(password, userObject.password).then(result => {
+                    if (result) {
+                        // Authentication successful
+                        console.log("Login Successful")
+                        res.status(200).json({userID:userObject._id, firstLogin})
+                    }
+                    else {
+                        console.log("Password did not match")
+                        res.status(500).json({message:"Password did not match"})
+                    }
+                }) 
+            }
+        }catch(err){
+            console.log(`Error verifing tenant login: ${err}`)
+            return false
+        }
+        
+    }
+
+    async changePassword(data){
+        try{
+            const {password,userID} = data
+            const lastLoginDate = this.getTodaysDate()
+            const collection = this.database.collection(this.useCases.changePassword)
+            /**TODO: Hash password here */
+            const saltRounds  = 5                            //higher the number,more difficult to crack
+                bcrypt.genSalt(saltRounds,function (saltError,salt) {
+                    if(saltError){ //if salting has issues
+                        console.log("Error salting password")
+                        throw(saltError)
+                    } else {
+                        bcrypt.hash(password,salt,function(hashError, hashed_password) {
+                            if (hashError){                        // if hashing with declared salt has issues
+                                console.log("Error Hashing Password")
+                                throw(hashError)
+                            }
+                            else {
+                                collection.updateOne({_id:ObjectId(userID)},{$set:{password:hashed_password, lastLoginDate}},async(err,result)=>{
+                                    if(err){
+                                        console.log(`Error updating password: ${err}`)
+                                    }
+                                    else{
+                                        console.log(`Password changed successfully for user ${userID}`)
+                                        return true
+                                    }
+                                })
+                            }
+                        })
+                    }
+                })
+        }catch(err){
+            console.log(`Error changing password. Error: ${err}`)
+            return false
         }
     }
     
@@ -613,6 +679,55 @@ exports.landlordDatabase = class landlordDatabase{
         }
     }
 
-    // TODO: updateTenant Info (Contact Info, name, image)
-    // TODO: landlord register themselves
+    getTodaysDate(){
+        const today = new Date();
+        const day = String(today.getDate()).padStart(2, '0');
+        const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+        const year = today.getFullYear();
+        return `${day}:${month}:${year}`
+    }
+
+    assertObjectHasProperties(obj, properties) {
+        for (const prop in properties) {
+          assert.ok(obj.hasOwnProperty(prop), `Object is missing property: ${prop}`);
+          assert.ok(typeof obj[prop] === properties[prop], `Property '${prop}' is incorrect, expected: ${properties[prop]}, got: ${obj[prop]}`);
+        }
+    }
+
+      async hashPasswords(user_name) {
+        try{
+        const collection = this.database.collection(this.useCases.login);
+        const userObject = await collection.findOne({username:user_name});
+        //var username = use "RC_0002" to test
+        var password =userObject["password"] //use "test123" to test
+        if (userObject== null){
+            console.log(`cant find username ${userObject['username']}`)
+        } else{
+            console.log('user found')
+        }
+        const saltRounds  = 5                            //higher the number,more difficult to crack
+        bcrypt.genSalt(saltRounds,function (saltError,salt) {
+            if(saltError){ //if salting has issues
+                console.log("Error salting password")
+                throw(saltError)
+            } else {
+                bcrypt.hash(password,salt,async function(hashError, hash){
+                    if (hashError){                        // if hashing with declared salt has issues
+                        console.log("Error hashing string")
+                        throw(hashError)
+                    } else {                               //hash and save it to database of user
+                        userObject["password"]=hash
+                        collection.updateOne({username:userObject['username']},{$set:{password:hash}})
+                        console.log("hash success")
+                    }
+                })
+            }
+        })
+        return true
+        }catch(error){
+            console.log(`Error hashing password of ${user_name}`)
+            return false
+        }
+    }
 }
+ 
