@@ -152,81 +152,81 @@ async function tenant_login(driver){
 
 
 
-//     it("landlord login integration test", async function(){
-//         let driver = await new Builder().forBrowser("chrome").build()
-//         await driver.manage().window().maximize(); 
-//         await driver.get("http://localhost:3000/")
-//         //click on button to login as landlord
-//         await driver.findElement(By.xpath("/html/body/div/div/div/div[3]/form/div[1]/div/div[2]/input")).click()
-//         // type in username
-//         await driver.findElement(By.name("username")).sendKeys("landlord_1",Key.RETURN)
-//         // type in password
-//         await driver.findElement(By.name("password")).sendKeys("test123",Key.RETURN)
-//         // submit login form and call login api from backend
-//         await driver.findElement(By.xpath("/html/body/div/div/div/div[3]/form/div[4]/button")).click()
-//         await delay(200); // give the test time to go to next page
-//         const logged_in = await driver.getCurrentUrl()
-//         logged_in.should.equal("http://localhost:3000/landlord/home")
-//         await driver.close()
+    it("landlord login integration test", async function(){
+        let driver = await new Builder().forBrowser("chrome").build()
+        await driver.manage().window().maximize(); 
+        await driver.get("http://localhost:3000/")
+        //click on button to login as landlord
+        await driver.findElement(By.xpath("/html/body/div/div/div/div[3]/form/div[1]/div/div[2]/input")).click()
+        // type in username
+        await driver.findElement(By.name("username")).sendKeys("landlord_1",Key.RETURN)
+        // type in password
+        await driver.findElement(By.name("password")).sendKeys("test123",Key.RETURN)
+        // submit login form and call login api from backend
+        await driver.findElement(By.xpath("/html/body/div/div/div/div[3]/form/div[4]/button")).click()
+        await delay(200); // give the test time to go to next page
+        const logged_in = await driver.getCurrentUrl()
+        logged_in.should.equal("http://localhost:3000/landlord/home")
+        await driver.close()
         
-//     });
+    });
 
-//     it("tenant first time login integration test", async function(){
-//         let driver = await new Builder().forBrowser("chrome").build()
-//         await driver.manage().window().maximize(); 
-//         await driver.get("http://localhost:3000/")
-//         //click on button to login as tenant
-//         await driver.findElement(By.xpath("/html/body/div/div/div/div[3]/form/div[1]/div/div[1]/input")).click()
-//         // type in username
-//         await driver.findElement(By.name("username")).sendKeys("RC_0002",Key.RETURN)
-//         // type in password
-//         await driver.findElement(By.name("password")).sendKeys("test123",Key.RETURN)
-//         // submit login form
-//         await driver.findElement(By.xpath("/html/body/div/div/div/div[3]/form/div[4]/button")).click() 
-//         await delay(200); // give the test time to go to next page
-//         const logged_in = await driver.getCurrentUrl()
-//         logged_in.should.equal("http://localhost:3000/tenant/firstLogin")
-//         await driver.close()
-//     });
+    it("tenant first time login integration test", async function(){
+        let driver = await new Builder().forBrowser("chrome").build()
+        await driver.manage().window().maximize(); 
+        await driver.get("http://localhost:3000/")
+        //click on button to login as tenant
+        await driver.findElement(By.xpath("/html/body/div/div/div/div[3]/form/div[1]/div/div[1]/input")).click()
+        // type in username
+        await driver.findElement(By.name("username")).sendKeys("RC_0002",Key.RETURN)
+        // type in password
+        await driver.findElement(By.name("password")).sendKeys("test123",Key.RETURN)
+        // submit login form
+        await driver.findElement(By.xpath("/html/body/div/div/div/div[3]/form/div[4]/button")).click() 
+        await delay(200); // give the test time to go to next page
+        const logged_in = await driver.getCurrentUrl()
+        logged_in.should.equal("http://localhost:3000/tenant/firstLogin")
+        await driver.close()
+    });
 
-//     it("tenant relogin integration test", async function(){
-//         let driver = await new Builder().forBrowser("chrome").build()
-//         await driver.manage().window().maximize(); 
-//         await driver.get("http://localhost:3000/")
-//         //click on button to login as tenant
-//         await driver.findElement(By.xpath("/html/body/div/div/div/div[3]/form/div[1]/div/div[1]/input")).click()
-//         // type in username
-//         await driver.findElement(By.name("username")).sendKeys("test1",Key.RETURN)
-//         // type in password
-//         await driver.findElement(By.name("password")).sendKeys("test123",Key.RETURN)
-//         // submit login form and call login api from backend
-//         await driver.findElement(By.xpath("/html/body/div/div/div/div[3]/form/div[4]/button")).click() 
-//         await delay(200); // give the test time to go to next page
-//         const logged_in = await driver.getCurrentUrl()
-//         logged_in.should.equal("http://localhost:3000/tenant/home")
-//         await driver.close()
-//     });
+    it("tenant relogin integration test", async function(){
+        let driver = await new Builder().forBrowser("chrome").build()
+        await driver.manage().window().maximize(); 
+        await driver.get("http://localhost:3000/")
+        //click on button to login as tenant
+        await driver.findElement(By.xpath("/html/body/div/div/div/div[3]/form/div[1]/div/div[1]/input")).click()
+        // type in username
+        await driver.findElement(By.name("username")).sendKeys("test1",Key.RETURN)
+        // type in password
+        await driver.findElement(By.name("password")).sendKeys("test123",Key.RETURN)
+        // submit login form and call login api from backend
+        await driver.findElement(By.xpath("/html/body/div/div/div/div[3]/form/div[4]/button")).click() 
+        await delay(200); // give the test time to go to next page
+        const logged_in = await driver.getCurrentUrl()
+        logged_in.should.equal("http://localhost:3000/tenant/home")
+        await driver.close()
+    });
     
-//     it("User login failure integration test", async function(){
-//         let driver = await new Builder().forBrowser("chrome").build()
-//         await driver.manage().window().maximize(); 
-//         await driver.get("http://localhost:3000/")
-//         //click on button to login as landlord
-//         await driver.findElement(By.xpath("/html/body/div/div/div/div[3]/form/div[1]/div/div[2]/input")).click()
-//         // type in username
-//         await driver.findElement(By.name("username")).sendKeys("landlord_1",Key.RETURN)
-//         // type in password
-//         await driver.findElement(By.name("password")).sendKeys("fakepassword",Key.RETURN)
-//         // submit login form and call login api from backend
-//         await driver.findElement(By.xpath("/html/body/div/div/div/div[3]/form/div[4]/button")).click()
-//         await delay(200); // give the test time to go to next page
-//         const logged_in = await driver.getCurrentUrl()
-//         logged_in.should.equal("http://localhost:3000/")//remain on the same page
-//         await driver.close()
+    it("User login failure integration test", async function(){
+        let driver = await new Builder().forBrowser("chrome").build()
+        await driver.manage().window().maximize(); 
+        await driver.get("http://localhost:3000/")
+        //click on button to login as landlord
+        await driver.findElement(By.xpath("/html/body/div/div/div/div[3]/form/div[1]/div/div[2]/input")).click()
+        // type in username
+        await driver.findElement(By.name("username")).sendKeys("landlord_1",Key.RETURN)
+        // type in password
+        await driver.findElement(By.name("password")).sendKeys("fakepassword",Key.RETURN)
+        // submit login form and call login api from backend
+        await driver.findElement(By.xpath("/html/body/div/div/div/div[3]/form/div[4]/button")).click()
+        await delay(200); // give the test time to go to next page
+        const logged_in = await driver.getCurrentUrl()
+        logged_in.should.equal("http://localhost:3000/")//remain on the same page
+        await driver.close()
         
-//     });
+    });
 
-// });
+
 
 
 describe("landlord manage building system test",function(){
