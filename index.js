@@ -78,7 +78,10 @@ app.use((req, res, next) => {
     req.query = mongoSanitize(req.query);
     next();
   });
-  
+
+ app.use(bodyParser.json({limit: '50mb'}));
+ app.use(bodyParser.urlencoded({extended:true, limit:'50mb'}));
+
 async function init(){
 
 
