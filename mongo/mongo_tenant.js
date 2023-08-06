@@ -539,6 +539,25 @@ exports.tenantDatabase = class tenantDatabase{
         }
     }
 
+    async updateUserInfo(userObject,res){
+        try{
+            const {userID,...updatingDocument} = userObject
+            const collection = this.database.collection(this.useCases.updateUserInfo)
+            await collection.updateOne({_id:ObjectId(userID)},{$set:updatingDocument},(err,result)=>{
+                if(err){
+                    console.log(`Error updating tenant information: ${err}`)
+                    res.status(500).json({message:"Error updating"})
+                } else {
+                    res.status(200).json({message:"Information has been successfuly changed"})
+                }
+            })
+
+        }catch(err){
+            console.log(`Error updating tenant user information: ${err}`)
+            res.status(500).json({message:"Error updating user information"})
+        }
+    }
+
     getTodaysDate(){
         const today = new Date();
         const day = String(today.getDate()).padStart(2, '0');

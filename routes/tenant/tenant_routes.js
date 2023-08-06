@@ -99,4 +99,9 @@ module.exports = function(app,database){
             res.send('Error hashing password')
         }
     })
+
+    app.put('/tenant/updateUserInfo',async(req,res)=>{
+        const updatingDocument = req.body
+        await database.updateUserInfo(updatingDocument,res)
+    })
 }

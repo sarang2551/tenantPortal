@@ -139,5 +139,15 @@ module.exports = function(app,database){
         res.send(`${JSON.stringify(result)}`);
     })
 
+    app.get('/landlord/getUserInfo/:userID',async(req,res)=>{
+        const userID = req.params.userID;
+        await database.getUserInfo(userID,res)
+    })
+
+    app.put('/landlord/updateUserInfo',async(req,res)=>{
+        const userObject = req.body
+        await database.updateUserInfo(userObject,res)
+    })
+
 
 }

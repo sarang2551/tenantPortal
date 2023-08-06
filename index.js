@@ -40,7 +40,8 @@ class Enviroment {
         getAllServiceTickets:"serviceTickets",
         getUnitData:"units",
         getUnitAndLandlordData:"tenants",
-        submitFeedback:"serviceTickets"
+        submitFeedback:"serviceTickets",
+        updateUserInfo:"tenants"
       }
   }
   getLandlordUseCases = () => {
@@ -62,6 +63,7 @@ class Enviroment {
         getBuildingInformation:"units",
         submitFeedback:"serviceTickets",
         deleteUnit: "units",
+        getUserInfo:"landlords"
       }
   }
 };

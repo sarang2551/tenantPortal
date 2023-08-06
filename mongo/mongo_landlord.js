@@ -190,21 +190,24 @@ exports.landlordDatabase = class landlordDatabase{
             if(!tenantInfo) {
                 console.log(`Unable to find tenant ${tenantID} for landlord`)
                 res.json({status:500,message:"Unable to find tenant"})
+                return
             }
             await tenantcollection.deleteOne({_id:ObjectId(tenantID)},(err,result)=>{
                 if(err){
                     console.log(`Unable to delete delete with ID: ${tenantID}`)
-                    return false
+                    res.json({status:500,message:`Unable to delete delete`})
+                    return 
                 } else {
                     console.log(`Deleted tenant ${tenantID}`)
-                    return true
+                    res.json({status:200,message:`tenant with ID: ${tenantID} deleted`})
+                    return 
                 }
             })
 
-            res.json({status:200,message:`tenant with ID: ${tenantID} deleted`})
+            
         } catch(err){
             console.log(`Error deleting tenant with ID: ${tenantID} Error : ${err}`)
-            return false
+            res.json({status:500,message:"Error deleting tenant"})
         }
     }
 
@@ -572,6 +575,42 @@ exports.landlordDatabase = class landlordDatabase{
         });
 
         console.log(`Email sent to ${email}`);
+    }
+
+    async getUserInfo(userID,res){
+        try{
+            const collection = this.database.collection(this.useCases.getUserInfo)
+            const result = await collection.findOne({_id:ObjectId(userID)})
+            if(!result){
+                console.log("Couldn't find landlord object for userInfo")
+                res.status(500).json({message:"Couldn't find landlord"})
+                return
+            }
+            res.status(200).json({userData:result})
+
+        }catch(err){
+            console.log(`Error getting user info for landlord. ${err}`)
+            res.status(500).json({message:"Error getting user info"})
+        }
+    }
+
+    async updateUserInfo(userObject,res){
+        try{
+            const {userID,...updatingDocument} = userObject
+            const collection = this.database.collection(this.useCases.getUserInfo)
+            await collection.updateOne({_id:ObjectId(userID)},{$set:updatingDocument},(err,result)=>{
+                if(err){
+                    console.log(`Error updating landlord information: ${err}`)
+                    res.status(500).json({message:"Error updating"})
+                } else {
+                    res.status(200).json({message:"Information has been successfuly changed"})
+                }
+            })
+
+        }catch(err){
+            console.log(`Error updating landlord user information: ${err}`)
+            res.status(500).json({message:"Error updating user information"})
+        }
     }
 
     // TODO: updateTenant Info (Contact Info, name, image)
