@@ -130,6 +130,7 @@ async function tenant_login(driver){
         await delay(200)
         const url = await driver.getCurrentUrl()
         url.should.equal("http://localhost:3000/")
+        await driver.close()
 
 
     });
@@ -281,7 +282,7 @@ describe("service ticket system test ",function(){
         await driver.findElement(By.xpath("/html/body/div/div/nav/div/div[2]/div/div[5]/svg")).click()
         const logout_page = await driver.getCurrentUrl()
         logout_page.should.equal("http://localhost:3000/")
-        await driver.close
+        await driver.close()
     });
     it("tenant service ticket addition test", async function(){
         //tenant logs in and add a new service ticket called EXAMPLE

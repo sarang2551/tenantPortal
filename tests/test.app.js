@@ -29,7 +29,6 @@ describe('Tenant Authentication and Registration API', () => {
 
 });
 
-
 //Additional tenant
 
 describe('Tenant Routes', () => {
