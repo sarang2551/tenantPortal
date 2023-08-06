@@ -2,6 +2,7 @@ const dotenv  = require('dotenv')
 const baseDatabase = require('./mongo/baseDatabase').baseDatabase
 const express = require("@feathersjs/express")
 const mongoSanitize = require('mongo-sanitize');
+const bodyParser = require("body-parser")
 
 class Enviroment {
   dotenvPath;
@@ -40,12 +41,14 @@ class Enviroment {
         getAllServiceTickets:"serviceTickets",
         getUnitData:"units",
         getUnitAndLandlordData:"tenants",
-        submitFeedback:"serviceTickets"
+        submitFeedback:"serviceTickets",
+        updateUserInfo:"tenants"
       }
   }
   getLandlordUseCases = () => {
       return {
         login: "landlords",
+        changePassword:"landlords",
         registerLandlord:"landlords",
         updateServiceTicketProgress:"serviceTickets",
         getAllServiceTickets:"serviceTickets",
@@ -62,6 +65,7 @@ class Enviroment {
         getBuildingInformation:"units",
         submitFeedback:"serviceTickets",
         deleteUnit: "units",
+        getUserInfo:"landlords"
       }
   }
 };
@@ -76,7 +80,10 @@ app.use((req, res, next) => {
     req.query = mongoSanitize(req.query);
     next();
   });
-  
+
+ app.use(bodyParser.json({limit: '50mb'}));
+ app.use(bodyParser.urlencoded({extended:true, limit:'50mb'}));
+
 async function init(){
 
 

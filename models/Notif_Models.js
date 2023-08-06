@@ -31,28 +31,25 @@ class Notif_Quotation extends NotificationBuilder{
     }
 }
 
-// class Notif_RegisterLandlordRequest extends NotificationBuilder {
-//     constructor(){
-//         super()
-//         this.withTitle("Requesting Landlord Registration")
-//         this.withCustomAttributes({accepted:false})
-//     }
-//     withTenantName(tenantName){
-//         this.withCustomAttributes({tenantName})
-//         return this
-//     }
-//     withTenantUnit(tenantUnit){
-//         this.withCustomAttributes({tenantUnit})
-//         return this
-//     }
-//     withMonthlyRental(monthlyRental){
-//         this.withCustomAttributes({monthlyRental})
-//         return this
-//     }
-// }
+class Notif_UpdatedProfile extends NotificationBuilder {
+    constructor(){
+        super()
+    }
+    withUpdatedAttributes(attributes){
+        // attributes is an object containing only the attributes that were updated in the profile
+        const keys = Object.keys(attributes);
+        var output = ""
+        for(let i = 0; i < keys.length; i++){
+            output += `${i+1}: Updated profile: ${keys[i]} \n`
+        }
+        return this
+    }
+
+}
 
 module.exports = TenantNotifications = {
     Notif_AddingServiceTicket,
     Notif_UpdateServiceTicket,
-    Notif_Quotation
+    Notif_Quotation,
+    Notif_UpdatedProfile
 }

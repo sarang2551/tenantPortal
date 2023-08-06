@@ -66,7 +66,7 @@ exports.tenantDatabase = class tenantDatabase{
             const year = today.getFullYear();
             const lastLoginDate = `${day}:${month}:${year}` // only add this attribute when first password is changed
             const collection = this.database.collection(this.useCases.changePassword)
-            /**TODO: Hash password here */
+            // Hash password here
             const saltRounds  = 5                            //higher the number,more difficult to crack
                 bcrypt.genSalt(saltRounds,function (saltError,salt) {
                     if(saltError){ //if salting has issues
@@ -192,6 +192,8 @@ exports.tenantDatabase = class tenantDatabase{
             // current stage of the serviceTicket is completed (tenant = true, landlord = true)
             if(progressStage < finalStage){ // if current stage is less than the final stage
                 progressStage += 1
+                notificationDescription = `Service Ticket: ${title} for ${unit} updated`
+                notificationTitle = `Service Ticket updated for unit ${unit}`
             } else{
                 // the final stage is completed
                 progressStage += 1
@@ -379,56 +381,6 @@ exports.tenantDatabase = class tenantDatabase{
         }
     }
 
-
-    // Just need to send serviceTicketID and Feedback json
-    updateFeedback = async (updateST) => {
-        try{
-            const collection = this.database.collection(this.useCases.updateServiceTicketProgress)
-            // find the serviceTicket and check whether both landlord and tenant have confirmed progress
-            var serviceTicketID = updateST["serviceTicketID"]
-            const serviceTicket = await collection.findOne({serviceTicketID:serviceTicketID})
-            if(serviceTicket == null){
-                console.log(`Service Ticket with ID: ${serviceTicketID} couldn't be found`)
-                return false
-            }
-            
-            var notificationDescription = ""
-            var notificationTitle = ""
-            var {title,
-                unit, 
-                tenantID, 
-                landlordID} = serviceTicket
-            var {feedbackRating} = updateST
-                
-            notificationDescription = `Feedback for Service Ticket: ${title} has been updated `
-            notificationTitle = `Service Ticket Feedback for unit ${unit}`
-
-            const notification = new Notif_UpdateServiceTicket()
-            .withDescription(notificationDescription)
-            .withTitle(notificationTitle)
-            .withCollection(this.recipientCollection)
-            .withSenderID(ObjectId(tenantID))
-            .withRecipientID(ObjectId(landlordID))
-            .withCustomAttributes({feedbackRating})
-            .build()
-            const result = await notification.send()
-            if(!result) throw new Error(`Notification for updating Service Ticket ${serviceTicketID} was not sent!`)
-            collection.updateOne({"serviceTicketID":serviceTicketID},{$set: { feedbackRating: feedbackRating }},(err,result)=>{
-                if(err){
-                    console.log(err)
-                    return false
-                } else {
-                    console.log(`Updated Service Ticket Feedback ${serviceTicketID}: ${result}`)
-                }
-            })
-            return true
-            
-        }catch(err){
-            console.log(`Error updating Service Ticket Feedback with ID: ${serviceTicketID} Error: ${err}`)
-            return false
-        }
-    }
-
     // Just need to send serviceTicketID and quotationAcceptedbyTenant
     updateQuotation = async (updateST) => {
         try{
@@ -536,6 +488,72 @@ exports.tenantDatabase = class tenantDatabase{
             return true
         }catch(err){
             console.log(`Error sending feedback for tenant: ${err}`)
+        }
+    }
+
+    async updateUserInfo(userObject,res){
+        try{
+            const {userID,...updatingDocument} = userObject
+            const collection = this.database.collection(this.useCases.updateUserInfo)
+            await collection.updateOne({_id:ObjectId(userID)},{$set:updatingDocument},(err,result)=>{
+                if(err){
+                    console.log(`Error updating tenant information: ${err}`)
+                    res.status(500).json({message:"Error updating"})
+                } else {
+                    res.status(200).json({message:"Information has been successfuly changed"})
+                }
+            })
+
+        }catch(err){
+            console.log(`Error updating tenant user information: ${err}`)
+            res.status(500).json({message:"Error updating user information"})
+        }
+    }
+
+    async getRentAndQuotationData(userID,res){
+        try{
+            const UnitCollection = this.database.collection("units")
+            const ServiceTicketCollection = this.database.collection("serviceTickets")
+            // get the sum of all quotationAmount attributes from all the tickets that the landlord has
+            const unitPipeline = [
+                {
+                  $match: {
+                    tenantRef: ObjectId(userID)
+                  }
+                },
+                {
+                  $group: {
+                    _id: null,
+                    totalSum: { $sum: "$monthlyRental" },
+                  },
+                },
+              ];
+              
+            const unitResult = await UnitCollection.aggregate(unitPipeline).toArray();
+            const TotalRent = unitResult[0].totalSum
+            
+            const ticketPipeline = [
+                {
+                  $match: {
+                    tenantRef: ObjectId(userID)
+                  }
+                },
+                {
+                  $group: {
+                    _id: null,
+                    totalSum: { $sum: "$quotationAmount" },
+                  },
+                },
+              ];
+
+            const ticketResult = await ServiceTicketCollection.aggregate(ticketPipeline).toArray();
+            const TotalQuotation = ticketResult[0].totalSum 
+            
+            res.status(200).json({TotalRent,TotalQuotation})
+
+        }catch(err){
+            console.log(`Error getting error and quotation data: ${err}`)
+            res.status(500).json({message:"`Error getting error and quotation data"})
         }
     }
 

@@ -11,4 +11,9 @@ module.exports = function(app,database){
         const serviceTicketID = req.params.serviceTicketID;
         await database.getServiceTicketInfo(serviceTicketID,res);
     })
+
+    app.get('/general/getSTImages/:serviceTicketID',async(req,res)=>{
+        const serviceTicketID = req.params.serviceTicketID;
+        await database.getSTImages(serviceTicketID,res);
+    })
 }
