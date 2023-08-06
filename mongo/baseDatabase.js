@@ -41,14 +41,16 @@ exports.baseDatabase =  class baseDatabase {
     getServiceTicketInfo = async(serviceTicketID,res) =>{
         try{
             const collection = this.database.collection("serviceTickets")
-            const serviceTicketObject = await collection.findOne({_id:ObjectId(serviceTicketID)})
+            const serviceTicketObject = await collection.findOne({_id:ObjectId(serviceTicketID)},{images:0,quotationDocument:0})
             if(!serviceTicketID){
                 console.log(`Error retrieving info for ticket with id: ${serviceTicketID}`)
                 res.status(500).json({message:"Error retrieving info for ticket"})
             }
+            
             res.status(200).json(serviceTicketObject)
         }catch(err){
-            console.log(`Error retrieving data for serviceTicket with id: ${serviceTicketID}`)
+            console.log(`Error retrieving data for serviceTicket with id: ${serviceTicketID} : ${err}`)
+            res.status(500).json({message:"Error retrieving info for ticket"})
         }
     }
 
