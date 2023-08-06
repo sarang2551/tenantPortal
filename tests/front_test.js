@@ -3,6 +3,21 @@
 const {Builder, By, Key, until} = require('selenium-webdriver')
 var should = require("chai").should();
 
+function generateRandomString() {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const minLength = 5;
+    const maxLength = 15;
+  
+    const randomLength = Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength;
+    let randomString = '';
+  
+    for (let i = 0; i < randomLength; i++) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      randomString += characters.charAt(randomIndex);
+    }
+  
+    return randomString;
+  }
 
 function delay(time) { // time is in ms
     return new Promise(resolve => setTimeout(resolve, time));
@@ -16,7 +31,7 @@ async function landlord_login(driver){
     // type in username
     await driver.findElement(By.name("username")).sendKeys("landlord_1",Key.RETURN)
     // type in password
-    await driver.findElement(By.name("password")).sendKeys("test123",Key.RETURN)
+    await driver.findElement(By.name("password")).sendKeys("test1234",Key.RETURN)
     // submit login form
     await driver.findElement(By.xpath("/html/body/div/div/div/div[3]/form/div[4]/button")).click() 
 
@@ -105,7 +120,7 @@ describe("login tests",function(){
         // type in username
         await driver.findElement(By.name("username")).sendKeys("landlord_1",Key.RETURN)
         // type in password
-        await driver.findElement(By.name("password")).sendKeys("test123",Key.RETURN)
+        await driver.findElement(By.name("password")).sendKeys("test1234",Key.RETURN)
         // submit login form
         await driver.findElement(By.xpath("/html/body/div/div/div/div[3]/form/div[4]/button")).click()
         await delay(200); // give the test time to go to next page
@@ -268,3 +283,72 @@ describe("service ticket journey ",function(){
         await driver.close()
     });
 }); 
+
+describe("changing profile information", () => {
+    it("tenant changing profile information fuzzing", async () => {
+      let driver = await new Builder().forBrowser("chrome").build();
+  
+      try {
+        await tenant_login(driver);
+        await delay(2000);
+        // go to profile page
+        await driver.findElement(By.xpath("/html/body/div/div/nav/div/div[2]/div/div[3]/a")).click();
+        await delay(2000);
+        // click on changing profile information
+        await driver.findElement(By.xpath("/html/body/div/div/div[2]/div/button[1]")).click();
+        // add fuzzing information
+        // add username
+        await driver.findElement(By.xpath("/html/body/div/div/div[3]/div/div/form/div[2]/input[1]")).sendKeys(generateRandomString(), Key.RETURN);
+        // add phone number
+        await driver.findElement(By.xpath("/html/body/div/div/div[3]/div/div/form/div[2]/input[2]")).sendKeys(generateRandomString(), Key.RETURN);
+        // add email
+        await driver.findElement(By.xpath("/html/body/div/div/div[3]/div/div/form/div[2]/input[3]")).sendKeys(generateRandomString(), Key.RETURN);
+  
+        // Make sure the browser is closed after the operations are complete
+        await driver.close();
+      } catch (error) {
+        // Handle any errors that occur during the test
+        console.error("Test error:", error);
+      } finally {
+        // Ensure the test is completed
+        done();
+      }
+    });
+
+    it("landlord changing profile information fuzzing", async () => {
+        let driver = await new Builder().forBrowser("chrome").build();
+    
+        try {
+          await landlord_login(driver);
+          await delay(2000);
+          // go to profile page
+          await driver.wait(until.elementLocated(By.xpath("/html/body/div/div/nav/div/div[2]/div/div[4]/a")), 10000);
+          await driver.findElement(By.xpath("/html/body/div/div/nav/div/div[2]/div/div[4]/a")).click();
+          await delay(2000);
+          // click on changing profile information
+          await driver.findElement(By.xpath("/html/body/div/div/div[2]/div/button[1]")).click();
+          // add fuzzing information
+          // add username
+          await driver.findElement(By.xpath("/html/body/div/div/div[3]/div/div/form/div[2]/input[1]")).sendKeys(generateRandomString(), Key.RETURN);
+          // add phone number
+          await driver.findElement(By.xpath("/html/body/div/div/div[3]/div/div/form/div[2]/input[2]")).sendKeys(generateRandomString(), Key.RETURN);
+          // add email
+          await driver.findElement(By.xpath("/html/body/div/div/div[3]/div/div/form/div[2]/input[3]")).sendKeys(generateRandomString(), Key.RETURN);
+    
+          // Make sure the browser is closed after the operations are complete
+          await driver.close();
+          process.exit(0)
+        } catch (error) {
+          // Handle any errors that occur during the test
+          console.error("Test error:", error);
+        } finally {
+          // Ensure the test is completed
+          done();
+          
+        }
+      });
+    
+  });
+
+  
+  

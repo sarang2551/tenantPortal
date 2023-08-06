@@ -535,20 +535,20 @@ exports.tenantDatabase = class tenantDatabase{
             const ticketPipeline = [
                 {
                   $match: {
-                    tenantRef: ObjectId(userID)
+                    tenantRef: ObjectId(userID),
+                    quotationAmount: { $exists: true }, 
                   }
                 },
                 {
                   $group: {
                     _id: null,
-                    totalSum: { $sum: "$quotationAmount" },
+                    totalSum: { $sum: { $toInt: "$quotationAmount" } },
                   },
                 },
               ];
 
             const ticketResult = await ServiceTicketCollection.aggregate(ticketPipeline).toArray();
             const TotalQuotation = ticketResult[0].totalSum 
-            
             res.status(200).json({TotalRent,TotalQuotation})
 
         }catch(err){
