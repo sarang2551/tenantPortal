@@ -52,5 +52,19 @@ exports.baseDatabase =  class baseDatabase {
         }
     }
 
-      
+    getSTImages = async(serviceTicketID, res) => {
+        try {
+            const collection = this.database.collection("serviceTickets")
+            const serviceTicketObject = await collection.findOne({_id:ObjectId(serviceTicketID)})
+            if(!serviceTicketID){
+                console.log(`Error retrieving info for ticket with id: ${serviceTicketID}`)
+                res.status(500).json({message:"Error retrieving info for ticket"})
+            }
+            res.status(200).json(serviceTicketObject.images)
+        }catch(err){
+            console.log(`Error retrieving images for serviceTicket with id: ${serviceTicketID}`)
+        }
+        
+    }
+
 }

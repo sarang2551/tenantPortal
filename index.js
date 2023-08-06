@@ -48,6 +48,7 @@ class Enviroment {
   getLandlordUseCases = () => {
       return {
         login: "landlords",
+        changePassword:"landlords",
         registerLandlord:"landlords",
         updateServiceTicketProgress:"serviceTickets",
         getAllServiceTickets:"serviceTickets",

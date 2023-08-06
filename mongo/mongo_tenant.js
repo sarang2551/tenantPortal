@@ -66,7 +66,7 @@ exports.tenantDatabase = class tenantDatabase{
             const year = today.getFullYear();
             const lastLoginDate = `${day}:${month}:${year}` // only add this attribute when first password is changed
             const collection = this.database.collection(this.useCases.changePassword)
-            /**TODO: Hash password here */
+            // Hash password here
             const saltRounds  = 5                            //higher the number,more difficult to crack
                 bcrypt.genSalt(saltRounds,function (saltError,salt) {
                     if(saltError){ //if salting has issues
@@ -192,6 +192,8 @@ exports.tenantDatabase = class tenantDatabase{
             // current stage of the serviceTicket is completed (tenant = true, landlord = true)
             if(progressStage < finalStage){ // if current stage is less than the final stage
                 progressStage += 1
+                notificationDescription = `Service Ticket: ${title} for ${unit} updated`
+                notificationTitle = `Service Ticket updated for unit ${unit}`
             } else{
                 // the final stage is completed
                 progressStage += 1
@@ -376,56 +378,6 @@ exports.tenantDatabase = class tenantDatabase{
         }catch(error){
             console.log(`Error getting unit and landlord data for user: ${userID}: ${error}`)
             res.json({status:500,message:error})
-        }
-    }
-
-
-    // Just need to send serviceTicketID and Feedback json
-    updateFeedback = async (updateST) => {
-        try{
-            const collection = this.database.collection(this.useCases.updateServiceTicketProgress)
-            // find the serviceTicket and check whether both landlord and tenant have confirmed progress
-            var serviceTicketID = updateST["serviceTicketID"]
-            const serviceTicket = await collection.findOne({serviceTicketID:serviceTicketID})
-            if(serviceTicket == null){
-                console.log(`Service Ticket with ID: ${serviceTicketID} couldn't be found`)
-                return false
-            }
-            
-            var notificationDescription = ""
-            var notificationTitle = ""
-            var {title,
-                unit, 
-                tenantID, 
-                landlordID} = serviceTicket
-            var {feedbackRating} = updateST
-                
-            notificationDescription = `Feedback for Service Ticket: ${title} has been updated `
-            notificationTitle = `Service Ticket Feedback for unit ${unit}`
-
-            const notification = new Notif_UpdateServiceTicket()
-            .withDescription(notificationDescription)
-            .withTitle(notificationTitle)
-            .withCollection(this.recipientCollection)
-            .withSenderID(ObjectId(tenantID))
-            .withRecipientID(ObjectId(landlordID))
-            .withCustomAttributes({feedbackRating})
-            .build()
-            const result = await notification.send()
-            if(!result) throw new Error(`Notification for updating Service Ticket ${serviceTicketID} was not sent!`)
-            collection.updateOne({"serviceTicketID":serviceTicketID},{$set: { feedbackRating: feedbackRating }},(err,result)=>{
-                if(err){
-                    console.log(err)
-                    return false
-                } else {
-                    console.log(`Updated Service Ticket Feedback ${serviceTicketID}: ${result}`)
-                }
-            })
-            return true
-            
-        }catch(err){
-            console.log(`Error updating Service Ticket Feedback with ID: ${serviceTicketID} Error: ${err}`)
-            return false
         }
     }
 
