@@ -2,6 +2,7 @@ const dotenv  = require('dotenv')
 const baseDatabase = require('./mongo/baseDatabase').baseDatabase
 const express = require("@feathersjs/express")
 const mongoSanitize = require('mongo-sanitize');
+const bodyParser = require("body-parser")
 
 class Enviroment {
   dotenvPath;
