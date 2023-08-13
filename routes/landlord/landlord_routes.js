@@ -3,7 +3,7 @@ module.exports = function(app,database){
         try{
             await database.verifyLogin(req.body,res)
         }catch(err){
-            res.status(500).json({message:"Error loging in landlord"})
+            res.status(500).json({message:"Error logging in landlord"})
         }
     })
     app.post('/landlord/registerLandlord',async(req,res)=>{

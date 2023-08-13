@@ -8,7 +8,7 @@ describe('Tenant Authentication and Registration API', () => {
     chai
       .request(`http://localhost:${PORT}`)
       .post('/tenant/tenantLogin')
-      .send({ username: 'test1', password: 'test123' })
+      .send({ username: 'Dylan', password: 'test123' })
       .end((err, res) => {
         // Now, check the response and the status code.
         expect(res).to.have.status(200);
@@ -29,17 +29,18 @@ describe('Tenant Authentication and Registration API', () => {
 
 });
 
-
 //Additional tenant
 
 describe('Tenant Routes', () => {
+  const valid_user_id = 'va64cfeae14afa49ebe4d602e0'
+  const serviceTicketid = '64cffba09c31c65a4cfbde46'
 
 
   it('should add a new service ticket', (done) => {
     chai
       .request(`http://localhost:${PORT}`)
       .post('/tenant/addServiceTicket')
-      .send({ userID: 'valid_user_id', tenantName: 'John Doe', unit: 'Unit 101' })
+      .send({ userID: valid_user_id, tenantName: 'John Doe', unit: 'Unit 101' })
       .end((err, res) => {
         expect(res).to.have.status(200);
         expect(res.body).to.have.property('status').to.equal(200);
@@ -52,7 +53,7 @@ describe('Tenant Routes', () => {
     chai
       .request(`http://localhost:${PORT}`)
       .put('/tenant/updateServiceTicketProgress')
-      .send({ _id: 'valid_service_ticket_id' })
+      .send({ _id: serviceTicketid })//test2 service ticket
       .end((err, res) => {
         expect(res).to.have.status(200);
         expect(res.body).to.have.property('status').to.equal(200);
@@ -64,7 +65,7 @@ describe('Tenant Routes', () => {
   it('should get unit data for a specific user', (done) => {
     chai
       .request(`http://localhost:${PORT}`)
-      .get('/tenant/getUnitData/valid_user_id')
+      .get(`/tenant/getUnitData/${valid_user_id}`)
       .end((err, res) => {
         expect(res).to.have.status(200);
         expect(res.body).to.have.property('status').to.equal(200);
@@ -76,7 +77,7 @@ describe('Tenant Routes', () => {
   it('should get all service tickets for a specific user', (done) => {
     chai
       .request(`http://localhost:${PORT}`)
-      .get('/tenant/getAllServiceTickets/valid_user_id')
+      .get(`/tenant/getAllServiceTickets/${valid_user_id}`)
       .end((err, res) => {
         expect(res).to.have.status(200);
         // Perform further assertions as needed
