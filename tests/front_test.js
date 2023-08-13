@@ -10,19 +10,16 @@ function delay(time) { // time is in ms
   }
 
 function generateRandomString() {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const minLength = 5;
-    const maxLength = 2000;
-  
-    const randomLength = Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength;
-    let randomString = '';
-  
-    for (let i = 0; i < randomLength; i++) {
-      const randomIndex = Math.floor(Math.random() * characters.length);
-      randomString += characters.charAt(randomIndex);
-    }
-  
-    return randomString;
+  let res = "";
+  // strings of any length between 10 and 1024
+  let length = Math.floor(Math.random() * 1024) + 10;
+  //generate a random character at each location of the string
+  for (let i =9 ; i < length ; i ++) {
+  //generate a character between ASCII 32 and 128
+  let c = String.fromCharCode(Math.floor(Math.random() * 96) + 32);
+  res = res + c;
+  }
+  return res;
   }
   
 
@@ -260,6 +257,24 @@ describe("landlord manage building system test",function(){
 
 
 describe("service ticket system test ",function(){
+      it("service ticket form fuzzing", async function(){
+        //tenant logs in and add a new service ticket called EXAMPLE
+        //use test1 tenant to test
+        let driver = await new Builder().forBrowser("chrome").build()
+        await tenant_login(driver)
+        await delay(200);
+        //go into serivce ticket page
+        await driver.findElement(By.xpath("/html/body/div/div/nav/div/div/div/div[2]/a")).click()
+        await delay(200); 
+        //click on the add new service ticket button
+        await driver.findElement(By.xpath("/html/body/div[1]/div/div/div[3]/div[1]/div[4]/div/div/span[2]/button")).click()
+        await delay(500)
+        //add the title of service ticket and description
+        await driver.findElement(By.xpath("/html/body/div[4]/div/div/div/form/div[2]/div[1]/input")).sendKeys((generateRandomString(),Key.RETURN))
+        await driver.findElement(By.xpath("/html/body/div[4]/div/div/div/form/div[2]/div[2]/input")).sendKeys((generateRandomString(),Key.RETURN))
+        await driver.findElement(By.xpath("/html/body/div[4]/div/div/form/button")).click()
+        await driver.close()
+    });
     it("tenant page navigation unit test", async function(){
         //tenant logs in and goes to every page
         //use test1 tenant to test
@@ -297,12 +312,10 @@ describe("service ticket system test ",function(){
         await driver.findElement(By.xpath("/html/body/div[4]/div/div/div/form/div[2]/div[2]/input")).sendKeys(("EXAMPLEDESCRIPTION",Key.RETURN))
         //click submit
         await delay(500)
-        // await driver.findElement(By.xpath("/html/body/div[4]/div/div/form/button")).click()
-        // await delay(2000)
-        // //await driver.findElement(By.xpath("/html/body/div[4]/div")).click()
-        // //await delay(20000); //wait for the page to update
-        // var title_check = await driver.findElement(By.xpath("/html/body/div[1]/div/div/div[2]/div[2]/div/div/div/table/tbody/tr[5]/td[2]")).getAttribute("value")
-        // title_check.should.equal("EXAMPLE");
+        await driver.findElement(By.xpath("/html/body/div[4]/div/div/form/button")).click()
+        await delay(500)
+        var title_check = await driver.findElement(By.xpath("/html/body/div[1]/div/div/div[2]/div[2]/div/div/div/table/tbody/tr[5]/td[2]")).getAttribute("value")
+        title_check.should.equal("EXAMPLE");
         await driver.close()
     });
 
